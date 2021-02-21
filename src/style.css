@@ -1,0 +1,36 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #535353;
+}
+h2 {
+  background-color: #dbdbdb;
+  margin: 0;
+  margin-bottom: 15px;
+  padding: 10px;
+  font-family: 'Open Sans';
+}
+#color-input {
+  display: none;
+}
+#color-label {
+  margin-left: 15px;
+  position: absolute;
+  height: 30px;
+  width: 50px;
+} 
+#color-input:checked ~ #color-picker {
+  opacity: 1;
+}
+#color-picker {
+  position: absolute;
+  left: 70px; 
+  height: 150px;
+  width: 185px;
+  opacity: 0;
+  padding: 5px;
+}
+canvas:hover {
+  cursor: url("https://content.invisioncic.com/Mtorrutor/profile/photo-106.png") 10 10, auto;
+}
