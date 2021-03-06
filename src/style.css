@@ -1,36 +1,48 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans);
 body {
-  margin: 0;
-  padding: 0;
+  margin: 0%;
+  padding: 0%;
   background-color: #535353;
 }
-h2 {
+h1 {
   background-color: #dbdbdb;
-  margin: 0;
-  margin-bottom: 15px;
-  padding: 10px;
+  padding: 1%;
+  text-align: center;
   font-family: 'Open Sans';
 }
+
 #color-input {
   display: none;
 }
-#color-label {
-  margin-left: 15px;
-  position: absolute;
-  height: 30px;
+
+.square {
+  height: 50px;
   width: 50px;
-} 
-#color-input:checked ~ #color-picker {
-  opacity: 1;
+  margin: 5px;
+  background-color: white;
+  border-color: black;
+  border-width: thin;
+  border-style: solid;
 }
-#color-picker {
-  position: absolute;
-  left: 70px; 
-  height: 150px;
-  width: 185px;
-  opacity: 0;
-  padding: 5px;
+
+.square:hover {
+  box-shadow: 5px 5px 5px;
 }
+
+#stepSize {
+  width: 80px;
+}
+
 canvas:hover {
   cursor: url("https://content.invisioncic.com/Mtorrutor/profile/photo-106.png") 10 10, auto;
 }
+
+/* #color-block {
+  width: 200px;
+  height: 200px;
+}
+
+#color-strip {
+  height: 200px;
+  width: 25px;
+} */
