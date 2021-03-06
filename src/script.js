@@ -39,8 +39,8 @@ var drag = false,
     prevY = blockHeight/2,
     rgbaColor = '',
     originalStepSize = parseInt($('#stepSize').get(0).value),
+    stepChange = parseFloat($('#stepChange').get(0).value),
     stepSize = originalStepSize,
-    prevStepSize = originalStepSize,
     allSquares = {},
     touchedSquare = false,
     currentSquare = null,
@@ -62,6 +62,18 @@ $('#stepSize').change(function(){
     alert("Value must be an integer between 0 and 50 inclusively.");
   } else {
     stepSize = number;
+    changeGridAccordingToBlock({'offsetX':x, 'offsetY':y})
+  }
+})
+
+// The step-change numeric input is just for personal use. It's used
+// to determine the appropriate change 
+$('#stepChange').change(function(){
+  var number = parseFloat(this.value)
+  if (number >= this.max || number <= this.min){
+    alert("Value must be an float between 0 and 1.0 exclusively.");
+  } else {
+    stepChange = number;
     changeGridAccordingToBlock({'offsetX':x, 'offsetY':y})
   }
 })
@@ -111,8 +123,7 @@ $('.square').click(function(e){
   y = oldY;
   // Use r,g,b for collecting data
   console.log(`(${r},${g},${b})`);
-  prevStepSize = stepSize;
-  stepSize *= 0.75;
+  stepSize *= stepChange;
   $('#stepSize').val(stepSize);
   changeGridAccordingToBlock({'offsetX':x, 'offsetY':y})
 });
@@ -151,12 +162,14 @@ function fancyMath(number, stepSize){
 // will go revert to the previous stepSize and the button will be 
 // disabled again.
 $('#goBack').click(function(e){
-  if (touchedSquare){
-    stepSize = prevStepSize;
+  if (touchedSquare && stepSize * 1/stepChange <= originalStepSize){
+    stepSize *= 1/stepChange;
     $('#stepSize').val(stepSize);
     x = prevX;
     y = prevY;
     changeGridAccordingToBlock({'offsetX':x, 'offsetY':y})
+  } else {
+    alert("You either haven't touched a square yet or the step-size is bigger than the original");
   }
 })
 
