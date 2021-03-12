@@ -34,9 +34,9 @@ canvas:hover {
 }
 
 .myBorder {
-  border-color: black;
+  /* border-color: black;
   border-width: thin;
-  border-style: solid; 
+  border-style: solid;  */
 }
 
 span {
