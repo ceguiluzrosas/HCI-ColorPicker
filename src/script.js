@@ -48,11 +48,21 @@ var drag = false,
     rowEnd = 4,
     colBeginning = 0,
     colEnd = 4,
-    numOfClicks = 0;
+    numOfClicks = 0
+    targetColor = null;
 
-// Initial filling of grid
-changeGridAccordingToBlock({'offsetX':blockWidth/2, 'offsetY':blockHeight/2})
+// Initial filling of grid and target
+changeGridAccordingToBlock({'offsetX':blockWidth/2, 'offsetY':blockHeight/2});
+randomTarget();
 
+// Generate a random color for the target
+function randomTarget(){
+  var r = Math.floor(Math.random() * 226),
+      g = Math.floor(Math.random() * 226),
+      b = Math.floor(Math.random() * 226);
+  $('#targetContainer').css('background-color', `rgba(${r},${g},${b},1)`);
+  targetColor = [r,g,b];
+}
 
 // The step-size numeric input is just for personal use. It's used
 // to determine the appropriate step-size
@@ -126,6 +136,7 @@ $('.square').click(function(e){
   stepSize *= stepChange;
   $('#stepSize').val(stepSize);
   changeGridAccordingToBlock({'offsetX':x, 'offsetY':y})
+  changeColorOfContainer();
 });
 
 // As the user hovers over the squares, keep watch of which one
@@ -139,8 +150,12 @@ $('.square').hover(function(e){
 $('body').keyup(function(e){
   if(e.keyCode == 32){
     // user has pressed space
-    var [r,g,b,_,_] = allSquares[currentSquare];
-    alert(`R:${r}, G:${g}, B:${b} --> Hex: ${rgbToHex(r,g,b)}`);
+    var [r,g,b,_,_] = allSquares[currentSquare],
+        [r_t, g_t, b_t] = targetColor;
+    
+    var string = `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${rgbToHex(r,g,b)}\n`
+    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${rgbToHex(r,g,b)}`
+    alert(string);
   }
 })
 
@@ -148,6 +163,14 @@ $('body').keyup(function(e){
 // clicked on the color-block.
 function getRGB(newX, newY){
   return blockCtx.getImageData(newX, newY, 1, 1).data;
+}
+
+// Change the background-color of the body according to 
+// the center-square
+var container = $("#myContainer").get(0);
+function changeColorOfContainer(){
+  var [r,g,b,_,_] = allSquares['b22'];
+  $(container).css('background-color', `rgba(${r},${g},${b},1)`);
 }
 
 // Ensures that RGB values are within range of 0 and 255
@@ -168,18 +191,31 @@ $('#goBack').click(function(e){
     x = prevX;
     y = prevY;
     changeGridAccordingToBlock({'offsetX':x, 'offsetY':y})
+    changeColorOfContainer();
   } else {
     alert("You either haven't touched a square yet or the step-size is bigger than the original");
   }
 })
 
-// Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-function componentToHex(c) {
-  var hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
-}
+// [RGB -> HEX] Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+// function componentToHex(c) {
+//   var hex = c.toString(16);
+//   return hex.length == 1 ? "0" + hex : hex;
+// }
+// function rgbToHex(r, g, b) {
+//   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+// }
+
+// [RGBA -> HEX] Source: https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript
 function rgbToHex(r, g, b) {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+  var hex = ( r | 1 << 8).toString(16).slice(1) +
+            ( g | 1 << 8).toString(16).slice(1) +
+            ( b | 1 << 8).toString(16).slice(1);
+  a = 1
+  // multiply before convert to HEX
+  a = ((a * 255) | 1 << 8).toString(16).slice(1)
+  hex = hex + a;
+  return "#" + hex;
 }
 
 // If the user clicks somewhere in the color-block, then enable drag and
@@ -189,12 +225,14 @@ function mousedownBlock(e) {
   stepSize = originalStepSize;
   $('#stepSize').val(stepSize);
   changeGridAccordingToBlock(e);
+  changeColorOfContainer();
 }
 
 // If the user is/continues dragging in the color-block, then change the color.
 function mousemoveBlock(e) {
   if (drag) {
     changeGridAccordingToBlock(e);
+    changeColorOfContainer();
   }
 }
 

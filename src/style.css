@@ -2,10 +2,9 @@
 body {
   margin: 0%;
   padding: 0%;
-  background-color: #535353;
+  background-color: white;
 }
 h1 {
-  background-color: #dbdbdb;
   padding: 1%;
   text-align: center;
   font-family: 'Open Sans';
@@ -20,9 +19,6 @@ h1 {
   width: 50px;
   margin: 5px;
   background-color: white;
-  border-color: black;
-  border-width: thin;
-  border-style: solid;
 }
 
 .square:hover {
@@ -37,12 +33,18 @@ canvas:hover {
   cursor: url("https://content.invisioncic.com/Mtorrutor/profile/photo-106.png") 10 10, auto;
 }
 
-/* #color-block {
-  width: 200px;
-  height: 200px;
+.myBorder {
+  border-color: black;
+  border-width: thin;
+  border-style: solid; 
 }
 
-#color-strip {
-  height: 200px;
-  width: 25px;
-} */
+span {
+  background-color: white;
+  padding: 0.25em;
+}
+
+#targetContainer {
+  height: 100px;
+  width: 100px;
+}
