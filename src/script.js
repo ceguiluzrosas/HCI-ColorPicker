@@ -146,16 +146,25 @@ $('.square').hover(function(e){
 })
 
 // If the presses the spacebar, alert them of the RGB + hex-code values
-// of the currently selected square.
+// of the currently selected square and change the target color.
 $('body').keyup(function(e){
   if(e.keyCode == 32){
     // user has pressed space
     var [r,g,b,_,_] = allSquares[currentSquare],
         [r_t, g_t, b_t] = targetColor;
     
-    var string = `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${rgbToHex(r,g,b)}\n`
-    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${rgbToHex(r,g,b)}`
+    var string = ''
+    // RGBA output; delete me if not necessary
+    string += `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${rgbaToHex(r,g,b)}\n`
+    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${rgbaToHex(r_t,g_t,b_t)}`
+
+    // RGB output
+    string += "\n\n"
+    string += `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${rgbToHex(r,g,b)}\n`
+    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${rgbToHex(r_t,g_t,b_t)}`
+
     alert(string);
+    randomTarget();
   }
 })
 
@@ -197,17 +206,17 @@ $('#goBack').click(function(e){
   }
 })
 
-// [RGB -> HEX] Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-// function componentToHex(c) {
-//   var hex = c.toString(16);
-//   return hex.length == 1 ? "0" + hex : hex;
-// }
-// function rgbToHex(r, g, b) {
-//   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-// }
+//[RGB -> HEX] Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+function rgbToHex(r, g, b) {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
 
 // [RGBA -> HEX] Source: https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript
-function rgbToHex(r, g, b) {
+function rgbaToHex(r, g, b) {
   var hex = ( r | 1 << 8).toString(16).slice(1) +
             ( g | 1 << 8).toString(16).slice(1) +
             ( b | 1 << 8).toString(16).slice(1);
