@@ -34,7 +34,7 @@ h1 {
 }
 
 canvas:hover {
-  cursor: url("https://content.invisioncic.com/Mtorrutor/profile/photo-106.png") 10 10, auto;
+  cursor: url("cursor.png") 10 10, auto;
 }
 
 /* #color-block {
