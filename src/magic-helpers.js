@@ -1,6 +1,16 @@
 // Canvas Color Picker based on https://codepen.io/pizza3/pen/BVzYNP
 
 
+// Generate a random color for the target
+function randomTarget(){
+  var r = Math.floor(Math.random() * 226),
+      g = Math.floor(Math.random() * 226),
+      b = Math.floor(Math.random() * 226);
+  $('#targetColor').css('background-color', `rgba(${r},${g},${b},1)`);
+  targetColor = [r,g,b];
+}
+
+
 // ✨ Color Block Magic ✨
 
 // Retreives the RGB values from the point where the user has
@@ -162,7 +172,7 @@ function fancyMath(number, stepSize){
   return boundColor(number + stepSize);
 }
 
-function randomMath(number, stepSize,){
+function randomMath(number, stepSize){
   return boundColor(Math.round(number + Math.random() * stepSize - stepSize/2));
 }
 
@@ -195,7 +205,7 @@ function incrementStep(step){
 
 // Changes the grid according to the block that the user selects.
 function changeGridAccordingToBlock(r=null, g=null, b=null) {
-  const randStep = stepSize/2;
+  const randStep = stepSize*randomness;
   let stepX = -stepSize*2,
       stepY = -stepSize*2;
   // Make sure we aren't out of bounds
@@ -277,10 +287,22 @@ function RGBToHSV(r, g, b) {
 
 // Hex conversions
 // Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-function componentToHex(c) {
-  let hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
-}
+// function componentToHex(c) {
+//   let hex = c.toString(16);
+//   return hex.length == 1 ? "0" + hex : hex;
+// }
+// function RGBToHex(r, g, b) {
+//   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+// }
+
+// [RGBA -> HEX] Source: https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript
 function RGBToHex(r, g, b) {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+  var hex = ( r | 1 << 8).toString(16).slice(1) +
+            ( g | 1 << 8).toString(16).slice(1) +
+            ( b | 1 << 8).toString(16).slice(1);
+  a = 1
+  // multiply before convert to HEX
+  a = ((a * 255) | 1 << 8).toString(16).slice(1)
+  hex = hex + a;
+  return "#" + hex;
 }

@@ -2,8 +2,7 @@
 
 const rows = 4,
 cols = 4,
-startColor = '(255, 0, 0, 1)',
-originalStepSize = parseInt($('#stepSize').get(0).value);
+startColor = '(255, 0, 0, 1)';
 
 // Color Block
 const colorBlock = $('#color-block').get(0),
@@ -34,8 +33,10 @@ let drag = false,
     y = blockHeight/2,
     prevX = blockWidth/2,
     prevY = blockHeight/2,
-    stepChange = parseFloat($('#stepChange').get(0).value),
+    originalStepSize = parseInt($('#stepSize').get(0).value),
     stepSize = originalStepSize,
+    stepChange = parseFloat($('#stepChange').get(0).value),
+    randomness = parseFloat($('#randomness').get(0).value),
     allSquares = {},
     touchedSquare = false,
     currentSquare = null;
@@ -83,7 +84,8 @@ $('#stepSize').change(function(){
   if (number > this.max || number < this.min || number % 1 != 0){
     alert("Value must be an integer between 0 and 50 inclusively.");
   } else {
-    stepSize = number;
+    originalStepSize = number;
+    stepSize = originalStepSize;
     changeGridAccordingToBlock(); 
   }
 })
@@ -96,6 +98,18 @@ $('#stepChange').change(function(){
     alert("Value must be an float between 0 and 1.0 exclusively.");
   } else {
     stepChange = number;
+    changeGridAccordingToBlock(); 
+  }
+})
+
+// The randomness numeric input is just for personal use. It's used
+// to determine the amount of randomness
+$('#randomness').change(function(){
+  let number = parseFloat(this.value)
+  if (number > this.max || number < this.min){
+    alert("Value must be an float between 0 and 1.0 inclusively.");
+  } else {
+    randomness = number;
     changeGridAccordingToBlock(); 
   }
 })
@@ -150,8 +164,12 @@ $('.square').hover(function(e){
 $('body').keyup(function(e){
   if(e.keyCode == 32){
     // user has pressed space
-    let [r,g,b,,] = allSquares[currentSquare];
-    alert(`R:${r}, G:${g}, B:${b} --> Hex: ${RGBToHex(r,g,b)}`);
+    let [r,g,b,,] = allSquares[currentSquare],
+        [r_t, g_t, b_t] = targetColor;
+
+    let string = `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${RGBToHex(r,g,b)}\n`
+    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${RGBToHex(r,g,b)}`
+    alert(string);
   }
 })
 
@@ -166,4 +184,8 @@ fillStrip();
 
 // Initialize grid
 changeGridAccordingToBlock();
+
+// Pick target color
+randomTarget();
+
 // changeStripPointers();

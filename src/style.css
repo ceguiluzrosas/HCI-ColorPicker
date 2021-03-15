@@ -2,13 +2,19 @@
 body {
   margin: 0%;
   padding: 0%;
-  background-color: #535353;
+  background-color: white;
 }
 h1 {
   background-color: #dbdbdb;
   padding: 1%;
   text-align: center;
   font-family: 'Open Sans';
+  width: 100%;
+}
+
+#myContainer {
+  background-color: #535353;
+  padding: 20px;
 }
 
 #color-input {
@@ -29,7 +35,7 @@ h1 {
   box-shadow: 5px 5px 5px;
 }
 
-#stepSize, #stepChange {
+input {
   width: 80px;
 }
 
@@ -37,12 +43,12 @@ canvas:hover {
   cursor: url("cursor.png") 10 10, auto;
 }
 
-/* #color-block {
-  width: 200px;
-  height: 200px;
+#targetContainer {
+  background-color: white;
+  padding: 50px;
 }
 
-#color-strip {
-  height: 200px;
-  width: 25px;
-} */
+#targetColor {
+  height: 100px;
+  width: 100px;
+}
