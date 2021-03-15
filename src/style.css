@@ -26,17 +26,19 @@ h1 {
   width: 50px;
   margin: 5px;
   background-color: white;
-  border-color: black;
-  border-width: thin;
-  border-style: solid;
+  border: black solid thin;
 }
 
 .square:hover {
   box-shadow: 5px 5px 5px;
 }
 
-input {
+input[type=number] {
   width: 80px;
+}
+
+input[type=radio] {
+  margin: 10px;
 }
 
 canvas:hover {
@@ -48,7 +50,12 @@ canvas:hover {
   padding: 50px;
 }
 
-#targetColor {
+.colorSquare {
   height: 100px;
   width: 100px;
+  border: black solid thin;
+}
+
+#userColor {
+  border: none;
 }

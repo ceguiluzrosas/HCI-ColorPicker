@@ -127,7 +127,7 @@ function fancyMath(number, stepSize){
   return boundColor(number + stepSize);
 }
 
-function randomMath(number){
+function randomMath(number, randomness){
   let randStep = stepSize * randomness;
   return boundColor(Math.round(number + Math.random() * randStep - randStep/2));
 }
@@ -135,13 +135,17 @@ function randomMath(number){
 // RGB input and output
 function rgbDither(rgb){
   [r,g,b] = rgb;
-  return [randomMath(r),randomMath(g),randomMath(b)];
+  return [
+    randomMath(r, rgbRandomness),
+    randomMath(g, rgbRandomness),
+    randomMath(b, rgbRandomness)
+  ];
 }
 
 // RGB input and output
 function hueDither(rgb){
   [h,s,v] = RGBToHSV(...rgb);
-  let _h = h + (Math.random() * randomness - randomness/2);
+  let _h = h + (Math.random() * hueRandomness - hueRandomness/2);
   if (_h < 0) { _h++; }
   return HSVToRGB(_h,s,v);
 }
@@ -158,8 +162,12 @@ function getSquareColor(x, y, stepX, stepY){
   return [_r,_g,_b,_x,_y];
 }
 
+function getCenterSquare(){
+  return `b${(rows-1)/2}${(cols-1)/2}`;
+}
+
 function isCenterSquare(row, col){
-  return rows%2 == 0 && cols%2 == 0 && rows/2 == row && cols/2 == col;
+  return rows%2 == 1 && cols%2 == 1 && `b${row}${col}` == getCenterSquare();
 }
 
 function updateSquares(){
@@ -182,8 +190,8 @@ function changeGridAccordingToBlock(r=null, g=null, b=null){
   [x,y] = boundXY(x,y);
   if (!r && !g && !b) { [r,g,b] = getRGBFromBlock(x, y); }
   // Assign grid colors
-  for (let row=0; row<=rows; row++){
-    for (let col=0; col<=rows; col++){
+  for (let row=0; row<rows; row++){
+    for (let col=0; col<cols; col++){
       // Assign square color, but don't randomize the center square
       if (isCenterSquare(row, col)) { allSquares[`b${row}${col}`] = [r,g,b,x,y]; }
       else { allSquares[`b${row}${col}`] = getSquareColor(x,y,stepX, stepY); }
@@ -198,7 +206,7 @@ function changeGridAccordingToBlock(r=null, g=null, b=null){
 function changeGridLayout(){
   for (let row=0; row<5; row++){
     for (let col=0; col<5; col++){
-      if (row>=0 && row<=rows && col>=0 && col<=cols) { $(`#b${row}${col}`).css('visibility', 'visible'); } 
+      if (row>=0 && row<rows && col>=0 && col<cols) { $(`#b${row}${col}`).css('visibility', 'visible'); } 
       else { $(`#b${row}${col}`).css('visibility', 'hidden'); }
     }
   }

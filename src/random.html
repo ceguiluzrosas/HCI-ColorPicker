@@ -71,26 +71,32 @@
           Step Size: 
           <input id="stepSize" type="number" min=0 max=50 value=50>
           Step Change:
-          <input id="stepChange" type="number" min=0 max=1 value=0.8>
+          <input id="stepChange" type="number" min=0 max=1 value=0.75>
         </div>
         <div class="col-md-6 text-left">
           <!-- TODO: Complete Functionality -->
           <button id="goBack">Go Back</button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6 text-right">
-          Randomness:
-          <input id="randomness" type="number" min=0 max=1 value=0.5>
+          <button id="submit">Submit</button>
         </div>
       </div>
       <div class="row">
         <div class="col-md-6 text-right">
           Dither Type:
-          <input type="radio" id="rgb" name="dither" value="rgb" checked="checked">
+          <input type="radio" name="dither" value="none" checked="checked">
+          <label for="none">None</label>
+          <input type="radio" name="dither" value="rgb">
           <label for="rgb">RGB</label>
-          <input type="radio" id="hue" name="dither" value="hue">
+          <input type="radio" name="dither" value="hue">
           <label for="hue">Hue</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 text-right">
+          Target BG Color:
+          <input type="radio" name="bgColor" value="white" checked="checked">
+          <label for="White">White</label>
+          <input type="radio" name="bgColor" value="#535353">
+          <label for="Gray">Gray</label>
         </div>
       </div>
     </div>
@@ -99,9 +105,9 @@
 
     <h1>Target Color</h1>
 
-    <div id="targetContainer" class="row">
-      <div id="targetColor" class="container">
-      </div> 
+    <div id="targetContainer" class="row d-flex justify-content-center">
+      <div id="targetColor" class="colorSquare"> </div>
+      <div id="userColor" class="colorSquare"> </div>  
     </div>
   
   </body>

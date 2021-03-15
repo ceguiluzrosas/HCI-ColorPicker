@@ -1,8 +1,11 @@
 // Initialize constants
 
-const rows = 4,
-cols = 4,
-startColor = '(255, 0, 0, 1)';
+const rows = 5,
+cols = 5,
+startColor = '(255, 0, 0, 1)',
+minStepSize = 25,
+rgbRandomness = 0.4,
+hueRandomness = 0.1;
 
 // Color Block
 const colorBlock = $('#color-block').get(0),
@@ -36,7 +39,6 @@ let drag = false,
     originalStepSize = parseInt($('#stepSize').get(0).value),
     stepSize = originalStepSize,
     stepChange = parseFloat($('#stepChange').get(0).value),
-    randomness = parseFloat($('#randomness').get(0).value),
     ditherType = $('input[name=dither]:checked').val(),
     allSquares = {},
     touchedSquare = false,
@@ -104,22 +106,13 @@ $('#stepChange').change(function(){
   }
 })
 
-// The randomness numeric input is just for personal use. It's used
-// to determine the amount of randomness
-$('#randomness').change(function(){
-  let number = parseFloat(this.value)
-  if (number > this.max || number < this.min){
-    alert("Value must be an float between 0 and 1.0 inclusively.");
-  } else {
-    randomness = number;
-    changeGridAccordingToBlock(); 
-  }
-})
-
 $('input[type=radio][name=dither]').change(function() {
   ditherType = this.value;
-  console.log(ditherType);
   changeGridAccordingToBlock(); 
+});
+
+$('input[type=radio][name=bgColor]').change(function() {
+  $('#targetContainer').css('background-color', this.value);
 });
 
 // Assuming the user has already touched a square, if they 
@@ -138,11 +131,20 @@ $('#goBack').click(function(e){
   }
 })
 
+// User is finished selecting a color
+$('#submit').click(function(e){
+  let [r,g,b,,] = allSquares[getCenterSquare()];
+  $('#userColor').css('background-color', `rgba(${r},${g},${b},1)`);
+  $('#userColor').css('border', 'black solid thin');
+  $('#targetColor').css('border-right', 'none');
+  $('#userColor').css('border-left', 'none');
+})
+
 // If the user clicks a square, adjust the stepsize, and update the grid. 
 // Also keep track of the previous values. 
 $('.square').click(function(e){
   touchedSquare = true;
-  let [r,g,b] = allSquares[e.target.id];
+  let [r,g,b,,] = allSquares[e.target.id];
   changeBlockAccordingToRGB(r, g, b);
   prevX = x;
   prevY = y;
@@ -150,7 +152,7 @@ $('.square').click(function(e){
   console.log([x, y]);
   stepSize *= stepChange;
   // Lower bound the step size
-  stepSize = Math.max(stepSize, 25);
+  stepSize = Math.max(stepSize, minStepSize);
   $('#stepSize').val(stepSize);
   changeGridAccordingToBlock(r, g, b);
 });
