@@ -16,87 +16,42 @@ function randomTarget(){
 // Retreives the RGB values from the point where the user has
 // clicked on the color-block.
 function getRGBFromBlock(newX, newY){
+  [newX, newY] = boundXY(newX, newY);
   return blockCtx.getImageData(Math.round(newX), Math.round(newY), 1, 1).data;
 }
 
 // L2 norm
-function getRGBDiff(rgb1, rgb2) {
+function getRGBDiff(rgb1, rgb2){
   [r1,g1,b1] = rgb1;
   [r2,g2,b2] = rgb2;
   return Math.sqrt((r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2)
 }
 
-function argMin([k1, v1], [k2, v2]){
-  if (v1 < v2) { return k1; }
-  else { return k2; }
-}
-
-function argMax([k1, v1], [k2, v2]){
-  if (v1 > v2) { return k1; }
-  else { return k2; }
-}
-
-let iterations = 0;
-
-// Partition into four quadrants based on boundary (2D recursive binary search)
-function getXYFromRGB(rgb, minX=0, minY=0, maxX=blockWidth-1, maxY=blockHeight-1){
-  // console.log(`minX: ${minX}, minY: ${minY}, maxX: ${maxX}, maxY: ${maxY}`);
-  iterations++;
-  let newMinX = minX, 
-      newMinY = minY, 
-      newMaxX = maxX, 
-      newMaxY = maxY;
-  // Check for exact match if window is smaller than 4x4. 
-  if ((maxX - minX) < 30 && (maxY - minY) < 30) {
-    // Increase the window by one on each side in case of rounding error.
-    newMinX = Math.max(0, minX - 1);
-    newMaxX = Math.min(blockWidth-1, maxX + 1);
-    newMinY = Math.max(0, minY - 1);
-    newMaxY = Math.min(blockHeight-1, maxY + 1);
-    console.log(`newMinX: ${newMinX}, newMinY: ${newMinY}, newMaxX: ${newMaxX}, newMaxY: ${newMaxY}`);
-    // Check each coordinate and keep track of best match in case
-    // an exact match isn't found.
-    let bestXY, bestDiff;
-    for (let _x = newMinX; _x <= newMaxX; _x++) {
-      for (let _y = newMinY; _y <= newMaxY; _y++) {
-        let color = getRGBFromBlock(_x, _y);
-        let diff = getRGBDiff(color, rgb);
-        if (diff == 0) { return [_x, _y] };
-        if (!bestDiff) {
-          bestXY = [_x, _y];
-          bestDiff = diff;
-        }
-        if (diff < bestDiff) { 
-          bestXY = [_x, _y];
-          bestDiff = diff;
-        }
+// Find [x,y] location on canvas given [r,g,b], ASSUMING THAT hue of canvas is set correctly.
+function getXYFromRGB(rgb){
+  if (rgb == [0,0,0]) { return [0, blockHeight-1]; }
+  [,s,v] = RGBToHSV(...rgb);
+  // Estimate x,y location using s,v values
+  est_x = Math.round((s) * (blockWidth-1));
+  est_y = Math.round((1-v) * (blockHeight-1));
+  // Check x +/- 1 , y +/- 1 because of rounding 
+  let bestXY, bestDiff;
+  for (let _x = est_x-1; _x <= est_x+1; _x++) {
+    for (let _y = est_y-1; _y <= est_y+1; _y++) {
+      let color = getRGBFromBlock(_x, _y);
+      let diff = getRGBDiff(color, rgb);
+      if (diff == 0) { return boundXY(_x, _y) };
+      if (!bestDiff) {
+        bestXY = boundXY(_x, _y);
+        bestDiff = diff;
+      }
+      if (diff < bestDiff) { 
+        bestXY = boundXY(_x, _y);
+        bestDiff = diff;
       }
     }
-    return bestXY;
   }
-  // Find next boundary
-  let lt = [minX, Math.round((minY+maxY)/2)],
-      rt = [maxX, Math.round((minY+maxY)/2)],
-      tp = [Math.round((minX+maxX)/2), minY],
-      bm = [Math.round((minX+maxX)/2), maxY],
-      ltColor = getRGBFromBlock(...lt),
-      rtColor = getRGBFromBlock(...rt),
-      tpColor = getRGBFromBlock(...tp),
-      bmColor = getRGBFromBlock(...bm),
-      ltDiff = getRGBDiff(ltColor, rgb),
-      rtDiff = getRGBDiff(rtColor, rgb),
-      tpDiff = getRGBDiff(tpColor, rgb),
-      bmDiff = getRGBDiff(bmColor, rgb);
-  // console.log(`lt: ${lt}, rt: ${rt}, tp: ${tp}, bm: ${bm}`);
-  console.log(`(${Math.round((minX+maxX)/2)},${Math.round((minY+maxY)/2)}) = rgba(${getRGBFromBlock(Math.round((minX+maxX)/2),Math.round((minY+maxY)/2))})`);
-  if (ltDiff <= rtDiff) { newMaxX = Math.round((minX+maxX)/2)+1; console.log("Going left ...")}
-  if (ltDiff >= rtDiff) { newMinX = Math.round((minX+maxX)/2)-1; console.log("Going right ...")}
-  if (tpDiff <= bmDiff) { newMaxY = Math.round((minY+maxY)/2)+1; console.log("Going up ...")}
-  if (tpDiff >= bmDiff) { newMinY = Math.round((minY+maxY)/2)-1; console.log("Going down ...")}
-  // console.log(`newMinX: ${newMinX}, newMinY: ${newMinY}, newMaxX: ${newMaxX}, newMaxY: ${newMaxY}`);
-  if (iterations < 10)
-  return getXYFromRGB(rgb, newMinX, newMinY, newMaxX, newMaxY);
-  else return [x,y];
+  return bestXY;
 }
 
 // Color the color-block with gradients.
@@ -123,9 +78,10 @@ function fillGradient(rgbaColor){
 
 // Set color-block color by extracting hue
 function changeBlockAccordingToRGB(r, g, b){
-  // Get hue from rgb
-  [hue,,] = RGBToHSV(r,g,b);
-  [r,g,b] = HSVToRGB(hue,1,1);
+  // Get hue and saturation from rgb
+  [h,s,] = RGBToHSV(r,g,b);
+  if (s == 0) { [r,g,b] = [0,0,0]; }
+  else { [r,g,b] = HSVToRGB(h,1,1); }
   rgbaColor = `rgba(${r},${g},${b},1)`;
   fillGradient(rgbaColor);
 }
@@ -156,9 +112,8 @@ function fillStrip(){
 
 // ✨ Grid Magic ✨
 
-function boundXY(){
-  x = Math.min(Math.max(x, 0), blockWidth-1);
-  y = Math.min(Math.max(y, 0), blockHeight-1);
+function boundXY(_x,_y){
+  return [Math.min(Math.max(_x, 0), blockWidth-1), Math.min(Math.max(_y, 0), blockHeight-1)];
 }
 
 // Ensures that RGB values are within range of 0 and 255
@@ -172,19 +127,31 @@ function fancyMath(number, stepSize){
   return boundColor(number + stepSize);
 }
 
-function randomMath(number, stepSize){
-  return boundColor(Math.round(number + Math.random() * stepSize - stepSize/2));
+function randomMath(number){
+  let randStep = stepSize * randomness;
+  return boundColor(Math.round(number + Math.random() * randStep - randStep/2));
 }
 
-// Get the exact RGB value and then randomly dither the RGB value by randStep
-function getSquareColor(x, y, stepX, stepY, randStep) {
-  let newX = fancyMath(x, stepX),
-      newY = fancyMath(y, stepY),
-      [exactR,exactG,exactB] = getRGBFromBlock(newX, newY),
-      randR = randomMath(exactR, randStep),
-      randG = randomMath(exactG, randStep),
-      randB = randomMath(exactB, randStep);
-  return [randR,randG,randB,newX,newY];
+// RGB input and output
+function rgbDither(rgb){
+  [r,g,b] = rgb;
+  return [randomMath(r),randomMath(g),randomMath(b)];
+}
+
+// RGB input and output
+function hueDither(rgb){
+  [h,s,v] = RGBToHSV(...rgb);
+  let _h = h + (Math.random() * randomness - randomness/2);
+  if (_h < 0) { _h++; }
+  return HSVToRGB(_h,s,v);
+}
+
+// Get the exact RGB value and then randomly dither the hue
+function getSquareColor(x, y, stepX, stepY){
+  let _x = fancyMath(x, stepX),
+      _y = fancyMath(y, stepY),
+      [_r,_g,_b] = rgbDither(getRGBFromBlock(_x,_y));
+  return [_r,_g,_b,_x,_y];
 }
 
 function isCenterSquare(row, col){
@@ -204,25 +171,18 @@ function incrementStep(step){
 }
 
 // Changes the grid according to the block that the user selects.
-function changeGridAccordingToBlock(r=null, g=null, b=null) {
-  const randStep = stepSize*randomness;
+function changeGridAccordingToBlock(r=null, g=null, b=null){
   let stepX = -stepSize*2,
       stepY = -stepSize*2;
   // Make sure we aren't out of bounds
-  boundXY();
+  [x,y] = boundXY(x,y);
   if (!r && !g && !b) { [r,g,b] = getRGBFromBlock(x, y); }
-  // Debugging
-  console.log(`visible center block: rgba(${r},${g},${b},1)`);
-  console.log(`x: ${x}, y: ${y}`);
-  let imageData = blockCtx.getImageData(x, y, 1, 1).data;
-  rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
-  console.log(`actual center block: ${rgbaColor}`);
   // Assign grid colors
   for (let row=0; row<=rows; row++){
     for (let col=0; col<=rows; col++){
       // Assign square color, but don't randomize the center square
       if (isCenterSquare(row, col)) { allSquares[`b${row}${col}`] = [r,g,b,x,y]; }
-      else { allSquares[`b${row}${col}`] = getSquareColor(x,y,stepX, stepY,randStep); }
+      else { allSquares[`b${row}${col}`] = getSquareColor(x,y,stepX, stepY); }
       stepY = incrementStep(stepY);
     }
     stepX = incrementStep(stepX);
@@ -245,7 +205,8 @@ function changeGridLayout(){
 
 // RGB <-> HSV conversions 
 // Source: https://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately
-function HSVToRGB(h, s, v) {
+// 0 <= h, s, v <= 1
+function HSVToRGB(h, s, v){
   let r, g, b, i, f, p, q, t;
   if (arguments.length === 1) { s = h.s, v = h.v, h = h.h; }
   i = Math.floor(h * 6);
@@ -266,7 +227,7 @@ function HSVToRGB(h, s, v) {
   b = Math.round(b * 255);
   return [r,g,b];
 }
-function RGBToHSV(r, g, b) {
+function RGBToHSV(r, g, b){
   if (arguments.length === 1) { g = r.g, b = r.b, r = r.r; }
   let max = Math.max(r, g, b), 
       min = Math.min(r, g, b),
@@ -287,16 +248,16 @@ function RGBToHSV(r, g, b) {
 
 // Hex conversions
 // Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-// function componentToHex(c) {
+// function componentToHex(c){
 //   let hex = c.toString(16);
 //   return hex.length == 1 ? "0" + hex : hex;
 // }
-// function RGBToHex(r, g, b) {
+// function RGBToHex(r, g, b){
 //   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 // }
 
 // [RGBA -> HEX] Source: https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript
-function RGBToHex(r, g, b) {
+function RGBToHex(r, g, b){
   var hex = ( r | 1 << 8).toString(16).slice(1) +
             ( g | 1 << 8).toString(16).slice(1) +
             ( b | 1 << 8).toString(16).slice(1);

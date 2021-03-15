@@ -138,12 +138,6 @@ $('.square').click(function(e){
   changeBlockAccordingToRGB(r, g, b);
   prevX = x;
   prevY = y;
-  // Debugging
-  console.log(`visible center block: rgba(${r},${g},${b},1)`);
-  console.log(`x: ${x}, y: ${y}`);
-  let imageData = blockCtx.getImageData(x, y, 1, 1).data;
-  rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
-  console.log(`actual center block: ${rgbaColor}`);
   [x, y] = getXYFromRGB([r,g,b]);
   console.log([x, y]);
   stepSize *= stepChange;
