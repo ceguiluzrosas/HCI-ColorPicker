@@ -115,6 +115,13 @@ $('input[type=radio][name=bgColor]').change(function() {
   $('#targetContainer').css('background-color', this.value);
 });
 
+$('input[type=radio][name=display]').change(function() {
+  switch (this.value) {
+    case "custom": $(".custom").show(); break;
+    case "adobe": $(".custom").hide(); break;
+  }
+});
+
 // Assuming the user has already touched a square, if they 
 // want to revert their decision, they can do so. The step size
 // will go revert to the previous stepSize and the button will be 

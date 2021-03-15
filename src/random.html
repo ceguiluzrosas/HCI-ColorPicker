@@ -14,6 +14,20 @@
     <h1>HCI: Color Picker</h1>
 
     <div id="myContainer" class="container"> 
+      <div class="row d-flex justify-content-center">
+        Display Mode:
+        <input type="radio" name="display" value="custom" checked="checked">
+        <label for="Custom">Custom</label>
+        <input type="radio" name="display" value="adobe">
+        <label for="Adobe">Adobe</label>
+      </div>
+      <div class="row d-flex justify-content-center">
+        Target BG Color:
+        <input type="radio" name="bgColor" value="white" checked="checked">
+        <label for="White">White</label>
+        <input type="radio" name="bgColor" value="#535353">
+        <label for="Gray">Gray</label>
+      </div>
       <div class="row">
         <div class="col-md-6">
           <div id="color-picker" class="text-right">  
@@ -27,7 +41,7 @@
         </div>
   
         <div class="col-md-6 text-left pt-auto pb-auto">
-          <div class="container">
+          <div class="container custom">
             <div class="row">
               <div id="b00" class="square not-middle"></div>
               <div id="b01" class="square not-middle"></div>
@@ -66,7 +80,7 @@
           </div>
         </div>
       </div>
-      <div class="row">
+      <div class="row custom">
         <div class="col-md-6 text-right">
           Step Size: 
           <input id="stepSize" type="number" min=0 max=50 value=50>
@@ -75,12 +89,11 @@
         </div>
         <div class="col-md-6 text-left">
           <!-- TODO: Complete Functionality -->
-          <button id="goBack">Go Back</button>
-          <button id="submit">Submit</button>
+          <button id="goBack" class="custom">Go Back</button>
         </div>
       </div>
       <div class="row">
-        <div class="col-md-6 text-right">
+        <div class="col-md-6 text-right custom">
           Dither Type:
           <input type="radio" name="dither" value="none" checked="checked">
           <label for="none">None</label>
@@ -92,11 +105,9 @@
       </div>
       <div class="row">
         <div class="col-md-6 text-right">
-          Target BG Color:
-          <input type="radio" name="bgColor" value="white" checked="checked">
-          <label for="White">White</label>
-          <input type="radio" name="bgColor" value="#535353">
-          <label for="Gray">Gray</label>
+        </div>
+        <div class="col-md-6 text-left">
+          <button id="submit">Submit</button>
         </div>
       </div>
     </div>
