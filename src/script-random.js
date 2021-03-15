@@ -17,6 +17,16 @@ const colorStrip = $('#color-strip').get(0),
       stripWidth = colorStrip.width,
       stripHeight = colorStrip.height;
 
+// Color Strip Pointers
+// const colorStripLeft = $('#color-strip-left').get(0),
+//       stripLeftCtx = colorStrip.getContext('2d'),
+//       stripLeftWidth = colorStrip.width,
+//       stripLeftHeight = colorStrip.height,
+//       colorStripRight = $('#color-strip-right').get(0),
+//       stripRightCtx = colorStrip.getContext('2d'),
+//       stripRightWidth = colorStrip.width,
+//       stripRightHeight = colorStrip.height;
+
 
 // Initialize variables
 let drag = false,
@@ -39,7 +49,9 @@ $(colorBlock).mousedown(function(e){
   drag = true;
   stepSize = originalStepSize;
   $('#stepSize').val(stepSize);
-  changeGridAccordingToBlock(e.offsetX, e.offsetY);
+  x = e.offsetX;
+  y = e.offsetY;
+  changeGridAccordingToBlock(); 
 });
 
 // If the user is/continues dragging in the color-block, then change the color.
@@ -47,7 +59,11 @@ $(colorBlock).mouseup(function(){
   drag = false;
 });
 $(colorBlock).mousemove(function(e){
-  if (drag) { changeGridAccordingToBlock(e.offsetX, e.offsetY); }
+  if (drag) { 
+    x = e.offsetX;
+    y = e.offsetY;
+    changeGridAccordingToBlock(); 
+  }
 });
 
 // If the user clicks on the color strip, then change the color block.
@@ -68,7 +84,7 @@ $('#stepSize').change(function(){
     alert("Value must be an integer between 0 and 50 inclusively.");
   } else {
     stepSize = number;
-    changeGridAccordingToBlock(x, y);
+    changeGridAccordingToBlock(); 
   }
 })
 
@@ -80,7 +96,7 @@ $('#stepChange').change(function(){
     alert("Value must be an float between 0 and 1.0 exclusively.");
   } else {
     stepChange = number;
-    changeGridAccordingToBlock(x, y);
+    changeGridAccordingToBlock(); 
   }
 })
 
@@ -92,7 +108,9 @@ $('#goBack').click(function(e){
   if (touchedSquare && stepSize * 1/stepChange <= originalStepSize){
     stepSize *= 1/stepChange;
     $('#stepSize').val(stepSize);
-    changeGridAccordingToBlock(prevX, prevY);
+    x = prevX;
+    y = prevY;
+    changeGridAccordingToBlock(); 
   } else {
     alert("You either haven't touched a square yet or the step-size is bigger than the original");
   }
@@ -102,19 +120,23 @@ $('#goBack').click(function(e){
 // Also keep track of the previous values. 
 $('.square').click(function(e){
   touchedSquare = true;
-  let [r,g,b,oldX,oldY] = allSquares[e.target.id];
+  let [r,g,b] = allSquares[e.target.id];
+  changeBlockAccordingToRGB(r, g, b);
   prevX = x;
   prevY = y;
-  x = oldX;
-  y = oldY;
-  // Use r,g,b for collecting data
-  console.log(`square click: (${r},${g},${b})`);
+  // Debugging
+  console.log(`visible center block: rgba(${r},${g},${b},1)`);
+  console.log(`x: ${x}, y: ${y}`);
+  let imageData = blockCtx.getImageData(x, y, 1, 1).data;
+  rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
+  console.log(`actual center block: ${rgbaColor}`);
+  [x, y] = getXYFromRGB([r,g,b]);
+  console.log([x, y]);
   stepSize *= stepChange;
   // Lower bound the step size
   stepSize = Math.max(stepSize, 25);
   $('#stepSize').val(stepSize);
-  changeBlockAccordingToRGB(r, g, b);
-  changeGridAccordingToBlock(x, y, r, g, b);
+  changeGridAccordingToBlock(r, g, b);
 });
 
 // As the user hovers over the squares, keep watch of which one
@@ -140,16 +162,8 @@ $('body').keyup(function(e){
 blockCtx.rect(0, 0, blockWidth, blockHeight);
 fillGradient(startColor);
 stripCtx.rect(0, 0, stripWidth, stripHeight);
-const gradient = stripCtx.createLinearGradient(0, 0, 0, blockHeight);
-gradient.addColorStop(1, 'rgba(255, 0, 0, 1)');
-gradient.addColorStop(0.85, 'rgba(255, 255, 0, 1)');
-gradient.addColorStop(0.68, 'rgba(0, 255, 0, 1)');
-gradient.addColorStop(0.51, 'rgba(0, 255, 255, 1)');
-gradient.addColorStop(0.34, 'rgba(0, 0, 255, 1)');
-gradient.addColorStop(0.17, 'rgba(255, 0, 255, 1)');
-gradient.addColorStop(0, 'rgba(255, 0, 0, 1)');
-stripCtx.fillStyle = gradient;
-stripCtx.fill();
+fillStrip();
 
 // Initialize grid
-changeGridAccordingToBlock(blockWidth/2, blockHeight/2);
+changeGridAccordingToBlock();
+// changeStripPointers();
