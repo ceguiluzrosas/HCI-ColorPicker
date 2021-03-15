@@ -150,7 +150,11 @@ function hueDither(rgb){
 function getSquareColor(x, y, stepX, stepY){
   let _x = fancyMath(x, stepX),
       _y = fancyMath(y, stepY),
-      [_r,_g,_b] = rgbDither(getRGBFromBlock(_x,_y));
+      [_r,_g,_b] = getRGBFromBlock(_x,_y);
+  switch (ditherType) {
+    case "hue": [_r,_g,_b] = hueDither([_r,_g,_b]); break;
+    case "rgb": [_r,_g,_b] = rgbDither([_r,_g,_b]); break;
+  }
   return [_r,_g,_b,_x,_y];
 }
 

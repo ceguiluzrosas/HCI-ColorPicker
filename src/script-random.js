@@ -37,10 +37,12 @@ let drag = false,
     stepSize = originalStepSize,
     stepChange = parseFloat($('#stepChange').get(0).value),
     randomness = parseFloat($('#randomness').get(0).value),
+    ditherType = $('input[name=dither]:checked').val(),
     allSquares = {},
     touchedSquare = false,
     currentSquare = null;
 
+console.log(ditherType);
 
 // Attach event handlers
 
@@ -113,6 +115,12 @@ $('#randomness').change(function(){
     changeGridAccordingToBlock(); 
   }
 })
+
+$('input[type=radio][name=dither]').change(function() {
+  ditherType = this.value;
+  console.log(ditherType);
+  changeGridAccordingToBlock(); 
+});
 
 // Assuming the user has already touched a square, if they 
 // want to revert their decision, they can do so. The step size

@@ -81,7 +81,16 @@
       <div class="row">
         <div class="col-md-6 text-right">
           Randomness:
-          <input id="randomness" type="number" min=0 max=1 value=0.1>
+          <input id="randomness" type="number" min=0 max=1 value=0.5>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 text-right">
+          Dither Type:
+          <input type="radio" id="rgb" name="dither" value="rgb" checked="checked">
+          <label for="rgb">RGB</label>
+          <input type="radio" id="hue" name="dither" value="hue">
+          <label for="hue">Hue</label>
         </div>
       </div>
     </div>
