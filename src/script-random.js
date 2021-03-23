@@ -7,6 +7,10 @@ minStepSize = 25,
 rgbRandomness = 0.4,
 hueRandomness = 0.1;
 
+var time = new Date().getTime()
+var clickCount = 0;
+var results = [];
+
 // Color Block
 const colorBlock = $('#color-block').get(0),
       blockCtx = colorBlock.getContext('2d'),
@@ -61,6 +65,7 @@ $(colorBlock).mousedown(function(e){
 
 // If the user is/continues dragging in the color-block, then change the color.
 $(colorBlock).mouseup(function(){
+  clickCount += 1;
   drag = false;
 });
 $(colorBlock).mousemove(function(e){
@@ -73,6 +78,7 @@ $(colorBlock).mousemove(function(e){
 
 // If the user clicks on the color strip, then change the color block.
 $(colorStrip).click(function(e){
+  clickCount += 1;
   x = e.offsetX;
   y = e.offsetY;
   let imageData = stripCtx.getImageData(x, y, 1, 1).data;
@@ -127,6 +133,7 @@ $('input[type=radio][name=display]').change(function() {
 // will go revert to the previous stepSize and the button will be 
 // disabled again.
 $('#goBack').click(function(e){
+    clickCount += 1;
   if (touchedSquare && stepSize * 1/stepChange <= originalStepSize){
     stepSize *= 1/stepChange;
     $('#stepSize').val(stepSize);
@@ -147,9 +154,33 @@ $('#submit').click(function(e){
   $('#userColor').css('border-left', 'none');
 })
 
+// Let user pick new color
+$('#new_color').click(function(e){
+  time_elapsed = new Date().getTime() - time;
+  // console.log(time_elapsed)
+  // let [r,g,b,,] = allSquares[currentSquare],
+  //       [r_t, g_t, b_t] = targetColor;
+  results.push([[allSquares[currentSquare][0],allSquares[currentSquare][1],allSquares[currentSquare][2]]
+    ,targetColor,time_elapsed,clickCount])
+  if(results.length == 10){
+    let csvContent = "data:text/csv;charset=utf-8,";
+
+    results.forEach(function(rowArray) {
+    let row = rowArray.join(",");
+    csvContent += row + "\r\n";
+    });
+    var encodedUri = encodeURI(csvContent);
+    window.open(encodedUri);
+  }
+  time = new Date().getTime();
+  clickCount = 0;
+  randomTarget();
+})
+
 // If the user clicks a square, adjust the stepsize, and update the grid. 
 // Also keep track of the previous values. 
 $('.square').click(function(e){
+  clickCount += 1;
   touchedSquare = true;
   let [r,g,b,,] = allSquares[e.target.id];
   changeBlockAccordingToRGB(r, g, b);
