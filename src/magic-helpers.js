@@ -102,14 +102,6 @@ function fillStrip(){
   stripCtx.fill();
 }
 
-// function changeStripPointers(){
-//   stripLeftCtx.fillStyle = "rgba(255,255,255,1)";
-//   stripLeftCtx.fillRect(x, y, stripLeftWidth, 1);
-//   stripRightCtx.fillStyle = "rgba(255,255,255,1)";
-//   stripRightCtx.fillRect(x, y, stripRighttWidth, 1);
-// }
-
-
 // ✨ Grid Magic ✨
 
 function boundXY(_x,_y){
@@ -255,18 +247,6 @@ function RGBToHSV(r, g, b){
   }
   return [h,s,v];
 }
-
-
-
-// Hex conversions
-// Source: https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-// function componentToHex(c){
-//   let hex = c.toString(16);
-//   return hex.length == 1 ? "0" + hex : hex;
-// }
-// function RGBToHex(r, g, b){
-//   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-// }
 
 // [RGBA -> HEX] Source: https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript
 function RGBToHex(r, g, b){

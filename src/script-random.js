@@ -1,15 +1,14 @@
 // Initialize constants
 
 const rows = 5,
-cols = 5,
-startColor = '(255, 0, 0, 1)',
-minStepSize = 25,
-rgbRandomness = 0.4,
-hueRandomness = 0.1;
+      cols = 5,
+      startColor = '(255, 0, 0, 1)',
+      minStepSize = 25,
+      rgbRandomness = 0.4,
+      hueRandomness = 0.1;
 
-var time = new Date().getTime()
-var clickCount = 0;
-var results = [];
+var LOGGER = new Logger(),
+    time = null;
 
 // Color Block
 const colorBlock = $('#color-block').get(0),
@@ -22,17 +21,6 @@ const colorStrip = $('#color-strip').get(0),
       stripCtx = colorStrip.getContext('2d'),
       stripWidth = colorStrip.width,
       stripHeight = colorStrip.height;
-
-// Color Strip Pointers
-// const colorStripLeft = $('#color-strip-left').get(0),
-//       stripLeftCtx = colorStrip.getContext('2d'),
-//       stripLeftWidth = colorStrip.width,
-//       stripLeftHeight = colorStrip.height,
-//       colorStripRight = $('#color-strip-right').get(0),
-//       stripRightCtx = colorStrip.getContext('2d'),
-//       stripRightWidth = colorStrip.width,
-//       stripRightHeight = colorStrip.height;
-
 
 // Initialize variables
 let drag = false,
@@ -48,10 +36,6 @@ let drag = false,
     touchedSquare = false,
     currentSquare = null;
 
-console.log(ditherType);
-
-// Attach event handlers
-
 // If the user clicks somewhere in the color-block, then enable drag and
 // change the color.
 $(colorBlock).mousedown(function(e){
@@ -65,9 +49,10 @@ $(colorBlock).mousedown(function(e){
 
 // If the user is/continues dragging in the color-block, then change the color.
 $(colorBlock).mouseup(function(){
-  clickCount += 1;
+  LOGGER.clicked_block();
   drag = false;
 });
+
 $(colorBlock).mousemove(function(e){
   if (drag) { 
     x = e.offsetX;
@@ -78,12 +63,12 @@ $(colorBlock).mousemove(function(e){
 
 // If the user clicks on the color strip, then change the color block.
 $(colorStrip).click(function(e){
-  clickCount += 1;
+  LOGGER.clicked_strip();
   x = e.offsetX;
   y = e.offsetY;
   let imageData = stripCtx.getImageData(x, y, 1, 1).data;
   rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
-  console.log(`strip click: ${rgbaColor}`);
+  //console.log(`strip click: ${rgbaColor}`);
   fillGradient(rgbaColor);
 });
 
@@ -114,16 +99,26 @@ $('#stepChange').change(function(){
 
 $('input[type=radio][name=dither]').change(function() {
   ditherType = this.value;
+  console.log(ditherType);
+  LOGGER.set_ditherType(this.value);
   changeGridAccordingToBlock(); 
 });
 
 $('input[type=radio][name=bgColor]').change(function() {
   $('#targetContainer').css('background-color', this.value);
+  if (this.value != "white"){
+    LOGGER.set_targetBGColor("gray");
+  }
 });
 
 $('input[type=radio][name=display]').change(function() {
+  LOGGER.set_displayMode(this.value);
   switch (this.value) {
-    case "custom": $(".custom").show(); break;
+    case "custom": {
+      $(".custom").show();
+      $(".not-middle").css('visibility', 'visible'); 
+      break;
+    }
     case "adobe": {
       $(".custom").hide(); 
       $(".not-middle").css('visibility', 'hidden'); 
@@ -138,20 +133,20 @@ $('input[type=radio][name=display]').change(function() {
 // will go revert to the previous stepSize and the button will be 
 // disabled again.
 $('#goBack').click(function(e){
-    clickCount += 1;
   if (touchedSquare && stepSize * 1/stepChange <= originalStepSize){
     stepSize *= 1/stepChange;
     $('#stepSize').val(stepSize);
     x = prevX;
     y = prevY;
-    changeGridAccordingToBlock(); 
+    changeGridAccordingToBlock();
+    LOGGER.clicked_back(); 
   } else {
     alert("You either haven't touched a square yet or the step-size is bigger than the original");
   }
 })
 
 // User is finished selecting a color
-$('#submit').click(function(e){
+$('#compare').click(function(e){
   let [r,g,b,,] = allSquares[getCenterSquare()];
   $('#userColor').css('background-color', `rgba(${r},${g},${b},1)`);
   $('#userColor').css('border', 'black solid thin');
@@ -159,40 +154,44 @@ $('#submit').click(function(e){
   $('#userColor').css('border-left', 'none');
 })
 
-// Let user pick new color
-$('#new_color').click(function(e){
-  time_elapsed = new Date().getTime() - time;
-  // console.log(time_elapsed)
-  // let [r,g,b,,] = allSquares[currentSquare],
-  //       [r_t, g_t, b_t] = targetColor;
-  results.push([[allSquares[currentSquare][0],allSquares[currentSquare][1],allSquares[currentSquare][2]]
-    ,targetColor,time_elapsed,clickCount])
-  if(results.length == 10){
-    let csvContent = "data:text/csv;charset=utf-8,";
+function disable_buttons(pressedStart){
+  $("#start").prop("disabled", pressedStart);
+  $("#submit").prop("disabled", !pressedStart);
+  $("#compare").prop("disabled", !pressedStart);
+}
 
-    results.forEach(function(rowArray) {
-    let row = rowArray.join(",");
-    csvContent += row + "\r\n";
-    });
-    var encodedUri = encodeURI(csvContent);
-    window.open(encodedUri);
-  }
+// User has clicked start
+$('#start').click(function(e){
+  LOGGER.start_round();
   time = new Date().getTime();
-  clickCount = 0;
   randomTarget();
+  LOGGER.set_targetColor(targetColor);
+  disable_buttons(true);
+})
+
+// Let user pick new color
+$('#submit').click(function(e){
+  var time_elapsed = new Date().getTime() - time;
+  LOGGER.set_submittedColor(allSquares[getCenterSquare()]);
+  LOGGER.set_time(time_elapsed);
+  LOGGER.stop_round();
+  if (LOGGER.all_done()){
+    LOGGER.create_file();
+  }   
+  disable_buttons(false);
 })
 
 // If the user clicks a square, adjust the stepsize, and update the grid. 
 // Also keep track of the previous values. 
 $('.square').click(function(e){
-  clickCount += 1;
+  LOGGER.clicked_grid();
   touchedSquare = true;
   let [r,g,b,,] = allSquares[e.target.id];
   changeBlockAccordingToRGB(r, g, b);
   prevX = x;
   prevY = y;
   [x, y] = getXYFromRGB([r,g,b]);
-  console.log([x, y]);
+  //console.log([x, y]);
   stepSize *= stepChange;
   // Lower bound the step size
   stepSize = Math.max(stepSize, minStepSize);
@@ -233,6 +232,4 @@ fillStrip();
 changeGridAccordingToBlock();
 
 // Pick target color
-randomTarget();
-
-// changeStripPointers();
+// randomTarget();
