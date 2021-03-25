@@ -124,7 +124,12 @@ $('input[type=radio][name=bgColor]').change(function() {
 $('input[type=radio][name=display]').change(function() {
   switch (this.value) {
     case "custom": $(".custom").show(); break;
-    case "adobe": $(".custom").hide(); break;
+    case "adobe": {
+      $(".custom").hide(); 
+      $(".not-middle").css('visibility', 'hidden'); 
+      // $(".not-middle").hide() moves middle-square to top left of grid
+      break;
+    }
   }
 });
 
