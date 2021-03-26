@@ -19,7 +19,7 @@ function sort_colors(colors, order){
 class Logger {
 
     constructor(){
-        this.number_of_tests = 2;
+        this.number_of_tests = 10;
         this.current_test_num = 0;
         this.data = [];
         this.targetColor = [];
