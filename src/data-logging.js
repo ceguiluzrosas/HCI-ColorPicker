@@ -36,28 +36,14 @@ class Logger {
         this.customColors = sort_colors(customColors, this.customOrder);
         this.adobeOrder = shuffle_array(adobeOrder);
         this.adobeColors = sort_colors(adobeColors, this.adobeOrder);
-
-        // unsure - but will keep here for now
-        this.targetBGColor = "white";
-        this.ditherType = "none";
-        this.initialStepSize = 50;
-        this.initialStepChange = 0.75;
     }
 
     all_done(){
         return this.number_of_tests == this.current_test_num;
     }
 
-    set_ditherType(type){
-        this.ditherType = type;
-    }
-
     set_time(time) {
         this.time = time / 1000;
-    }
-
-    set_targetBGColor(color){
-        this.targetBGColor = color;
     }
 
     set_targetColor(color){
@@ -71,9 +57,6 @@ class Logger {
 
     set_displayMode(mode){
         this.displayMode = mode;
-        if (mode == "custom"){
-            this.ditherType = "n/a"
-        }
     }
 
     clicked_grid(){
@@ -125,12 +108,6 @@ class Logger {
         number-of-back-clicks: int,
         time: int,
         display-mode: [custom or adobe],
-        target-bg-color: [white or grey],
-        dither-type: [none, rgb, or hue],
-
-        // unsure - but will keep here for now
-        initial-step-size: decimal,
-        initial-step-change: decimal,
     }
     */
 
@@ -142,8 +119,6 @@ class Logger {
         string += "start-t,";
         string += "end-t,";
         string += "display,";
-        string += "t-BG,";
-        string += "dither,";
         return string + "\r\n";
     }
 
@@ -157,8 +132,6 @@ class Logger {
             this.numberOfBackClicks,
             this.time,
             this.displayMode,
-            this.targetBGColor,
-            this.ditherType
         ]);
     }
 

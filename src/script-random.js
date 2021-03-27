@@ -28,10 +28,10 @@ let drag = false,
     y = blockHeight/2,
     prevX = blockWidth/2,
     prevY = blockHeight/2,
-    originalStepSize = parseInt($('#stepSize').get(0).value),
+    originalStepSize = 50,
     stepSize = originalStepSize,
-    stepChange = parseFloat($('#stepChange').get(0).value),
-    ditherType = $('input[name=dither]:checked').val(),
+    stepChange = 0.75,
+    ditherType = "rgb",
     allSquares = {},
     touchedSquare = false,
     currentSquare = null;
@@ -70,45 +70,6 @@ $(colorStrip).click(function(e){
   rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
   //console.log(`strip click: ${rgbaColor}`);
   fillGradient(rgbaColor);
-});
-
-// The step-size numeric input is just for personal use. It's used
-// to determine the appropriate step-size
-$('#stepSize').change(function(){
-  let number = parseInt(this.value)
-  if (number > this.max || number < this.min || number % 1 != 0){
-    alert("Value must be an integer between 0 and 50 inclusively.");
-  } else {
-    originalStepSize = number;
-    stepSize = originalStepSize;
-    changeGridAccordingToBlock(); 
-  }
-})
-
-// The step-change numeric input is just for personal use. It's used
-// to determine the appropriate change 
-$('#stepChange').change(function(){
-  let number = parseFloat(this.value)
-  if (number >= this.max || number <= this.min){
-    alert("Value must be an float between 0 and 1.0 exclusively.");
-  } else {
-    stepChange = number;
-    changeGridAccordingToBlock(); 
-  }
-})
-
-$('input[type=radio][name=dither]').change(function() {
-  ditherType = this.value;
-  console.log(ditherType);
-  LOGGER.set_ditherType(this.value);
-  changeGridAccordingToBlock(); 
-});
-
-$('input[type=radio][name=bgColor]').change(function() {
-  $('#targetContainer').css('background-color', this.value);
-  if (this.value != "white"){
-    LOGGER.set_targetBGColor("gray");
-  }
 });
 
 $('input[type=radio][name=display]').change(function() {
