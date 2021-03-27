@@ -2,19 +2,14 @@
 body {
   margin: 0%;
   padding: 0%;
-  background-color: white;
+  background-color: #535353;
 }
 h1 {
-  background-color: #dbdbdb;
-  padding: 1%;
+  color: white;
+  padding-top: 1rem;
   text-align: center;
   font-family: 'Open Sans';
   width: 100%;
-}
-
-#myContainer {
-  background-color: #535353;
-  padding: 20px;
 }
 
 #color-input {
@@ -47,7 +42,7 @@ canvas:hover {
 
 #targetContainer {
   background-color: #535353;
-  padding: 50px;
+  padding: 1rem;
 }
 
 .colorSquare {

@@ -11,16 +11,9 @@
   </head>
 
   <body>
-    <h1>HCI: Color Picker</h1>
+    <h1>Stage <span id="stage-number"></span> (<span id="color-number"></span>/10)</h1>
 
-    <div id="myContainer" class="container"> 
-      <div class="row d-flex justify-content-center">
-        Display Mode:
-        <input type="radio" name="display" value="custom" checked="checked">
-        <label for="Custom">Custom</label>
-        <input type="radio" name="display" value="adobe">
-        <label for="Adobe">Adobe</label>
-      </div>
+    <div class="container"> 
       <div class="row">
         <div class="col-md-6">
           <div id="color-picker" class="text-right">  
@@ -84,6 +77,7 @@
       </div>
     </div>
 
+    <br/>
     <br/>
 
     <h1>Target Color</h1>

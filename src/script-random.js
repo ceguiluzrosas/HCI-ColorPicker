@@ -34,7 +34,9 @@ let drag = false,
     ditherType = "rgb",
     allSquares = {},
     touchedSquare = false,
-    currentSquare = null;
+    currentSquare = null,
+    stage_number = 1,
+    color_number = 0;
 
 // If the user clicks somewhere in the color-block, then enable drag and
 // change the color.
@@ -139,6 +141,7 @@ $('#submit').click(function(e){
   if (LOGGER.all_done()){
     LOGGER.create_file();
   }   
+  $("#color-number").text(++color_number);
   disable_buttons(false);
 })
 
@@ -182,6 +185,10 @@ $('body').keyup(function(e){
 
 
 // Initialize UI
+
+// Display current stage
+$("#stage-number").text(stage_number);
+$("#color-number").text(color_number);
 
 // Apply Colors to Strip and Block
 blockCtx.rect(0, 0, blockWidth, blockHeight);
