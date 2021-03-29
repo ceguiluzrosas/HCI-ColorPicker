@@ -41,8 +41,11 @@ canvas:hover {
 }
 
 #targetContainer {
-  background-color: #535353;
   padding: 1rem;
+}
+
+#targetColor {
+  visibility: hidden;
 }
 
 .colorSquare {
@@ -53,4 +56,8 @@ canvas:hover {
 
 #userColor {
   border: none;
+}
+
+button {
+  margin-right: 1rem;
 }

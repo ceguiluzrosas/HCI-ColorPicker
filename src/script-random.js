@@ -1,5 +1,18 @@
 // Initialize constants
 
+// Color Block
+const colorBlock = $('#color-block').get(0),
+      blockCtx = colorBlock.getContext('2d'),
+      blockWidth = colorBlock.width,
+      blockHeight = colorBlock.height;
+
+// Color Strip
+const colorStrip = $('#color-strip').get(0),
+      stripCtx = colorStrip.getContext('2d'),
+      stripWidth = colorStrip.width,
+      stripHeight = colorStrip.height;
+
+// General constants
 const rows = 5,
       cols = 5,
       startColor = '(255, 0, 0, 1)',
@@ -8,6 +21,8 @@ const rows = 5,
       hueRandomness = 0.1,
       nTests = 10,
       testColors = randomColors(nTests),
+      xStart = blockWidth/2,
+      yStart = blockHeight/2,
       displayOrder = shuffleArray(["adobe", "custom"]);
 
 // Set up color tests for each display mode
@@ -24,22 +39,10 @@ const stages = displayOrder.map((display) => {
 let LOGGER = new Logger(stages),
     time = null;
 
-// Color Block
-const colorBlock = $('#color-block').get(0),
-      blockCtx = colorBlock.getContext('2d'),
-      blockWidth = colorBlock.width,
-      blockHeight = colorBlock.height;
-
-// Color Strip
-const colorStrip = $('#color-strip').get(0),
-      stripCtx = colorStrip.getContext('2d'),
-      stripWidth = colorStrip.width,
-      stripHeight = colorStrip.height;
-
 // Initialize variables
 let drag = false,
-    x = blockWidth/2,
-    y = blockHeight/2,
+    x = xStart,
+    y = yStart,
     prevX = blockWidth/2,
     prevY = blockHeight/2,
     originalStepSize = 50,
@@ -104,6 +107,13 @@ $('#start').click(function(e){
   $("#stage-number").text(currentStage+1);
   $("#color-number").text(currentTest+1);
   setDisplayMode(stages[currentStage]["display"]);
+  $('#userColor').css('visibility', 'hidden');
+  $('#targetColor').css('border-right', '');
+  x = xStart;
+  y = yStart;
+  fillGradient(startColor);
+  changeGridAccordingToBlock();
+
   let color = stages[currentStage]["colors"][currentTest];
   LOGGER.start_round(currentStage, currentTest, color);
   setTargetColor(color);
@@ -133,6 +143,8 @@ $('#submit').click(function(e){
   else {
     currentTest++;
   }
+  if (currentTest == 0){ $('#start').text("Start Test") }
+  else { $('#start').text("Next Test") }
 })
 
 // If the user clicks a square, adjust the stepsize, and update the grid. 
@@ -191,7 +203,5 @@ stripCtx.rect(0, 0, stripWidth, stripHeight);
 fillStrip();
 
 // Initialize grid
+fillGradient(startColor);
 changeGridAccordingToBlock();
-
-// Pick target color
-// randomTarget();

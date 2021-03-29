@@ -52,11 +52,13 @@ function randomColors(n){
 
 function setTargetColor(color){
   let [r,g,b] = color;
+  $('#targetColor').css('visibility', 'visible');
   $('#targetColor').css('background-color', `rgba(${r},${g},${b},1)`);
   targetColor = [r,g,b];
 }
 
 function compareColor(r,g,b){
+  $('#userColor').css('visibility', 'visible');
   $('#userColor').css('background-color', `rgba(${r},${g},${b},1)`);
   $('#userColor').css('border', 'black solid thin');
   $('#targetColor').css('border-right', 'none');
@@ -109,6 +111,7 @@ function getXYFromRGB(rgb){
 
 // Color the color-block with gradients.
 function fillGradient(rgbaColor){
+  blockCtx.clearRect(0, 0, blockWidth, blockHeight);
   blockCtx.fillStyle = rgbaColor;
   blockCtx.fillRect(0, 0, blockWidth, blockHeight);
 
@@ -143,6 +146,7 @@ function changeBlockAccordingToRGB(r, g, b){
 // ✨ Color Strip Magic ✨
 
 function fillStrip(){
+  stripCtx.clearRect(0, 0, stripWidth, stripHeight);
   let gradient = stripCtx.createLinearGradient(0, 0, 0, blockHeight);
   gradient.addColorStop(1, 'rgba(255, 0, 0, 1)');
   gradient.addColorStop(0.85, 'rgba(255, 255, 0, 1)');
