@@ -157,7 +157,6 @@ $('.square').click(function(e){
   prevX = x;
   prevY = y;
   [x, y] = getXYFromRGB([r,g,b]);
-  //console.log([x, y]);
   stepSize *= stepChange;
   // Lower bound the step size
   stepSize = Math.max(stepSize, minStepSize);
@@ -166,23 +165,9 @@ $('.square').click(function(e){
 });
 
 // As the user hovers over the squares, keep watch of which one
-// they are currenlty hovering over.
+// they are currently hovering over.
 $('.square').hover(function(e){
   currentSquare = e.target.id;
-})
-
-// If the presses the spacebar, alert them of the RGB + hex-code values
-// of the currently selected square.
-$('body').keyup(function(e){
-  if(e.keyCode == 32){
-    // user has pressed space
-    let [r,g,b,,] = allSquares[currentSquare],
-        [r_t, g_t, b_t] = targetColor;
-
-    let string = `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${RGBToHex(r,g,b)}\n`
-    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${RGBToHex(r,g,b)}`
-    alert(string);
-  }
 })
 
 
@@ -194,8 +179,6 @@ $("#stage-number").text(currentStage+1);
 $("#color-number").text(currentTest+1);
 setDisplayMode(stages[currentStage]["display"]);
 
-// $("button").prop("disabled", true);
-
 // Apply Colors to Strip and Block
 blockCtx.rect(0, 0, blockWidth, blockHeight);
 fillGradient(startColor);
@@ -205,3 +188,10 @@ fillStrip();
 // Initialize grid
 fillGradient(startColor);
 changeGridAccordingToBlock();
+
+// Create sample JSON download link for testing
+let sampleJSON = {
+  "sample": "download"
+};
+let encodedUri = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sampleJSON));
+$("#sample").attr("href", encodedUri);

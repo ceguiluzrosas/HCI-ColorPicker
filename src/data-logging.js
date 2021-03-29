@@ -56,50 +56,36 @@ class Logger {
     
     /*
     {
-        target-color-r: int,
-        target-color-g: int,
-        target-color-b: int,
-        submitted-color-r: int,
-        submitted-color-g: int,
-        submitted-color-b: int,
-        number-of-grid-clicks: int,
-        number-of-block-clicks: int,
-        number-of-strip-clicks: int,
+        display mode: [custom or adobe],
+        stage: int,
+        test: int,
+        target color: (r,g,b),
+        submitted color: (r,g,b),
+        grid clicks: int,
+        block clicks: int,
+        strip clicks: int,
         time: int,
-        display-mode: [custom or adobe],
     }
     */
 
-    add_headers(){
-        let string = "";
-        string += "t-R,t-B,t-G,";
-        string += "s-R,s-B,s-G,";
-        string += "grid-c,block-c,strip-c,";
-        string += "start-t,";
-        string += "end-t,";
-        string += "display,";
-        return string + "\r\n";
-    }
-
     update_data(){
-        this.data.push([
-            this.targetColor[0], this.targetColor[1], this.targetColor[2],
-            this.submittedColor[1], this.submittedColor[1], this.submittedColor[2],
-            this.numberOfGridClicks,
-            this.numberOfBlockClicks,
-            this.numberOfStripClicks,
-            this.time,
-            this.stages[this.currentStage]["display"],
-        ]);
+        this.data.push({
+            "display mode": this.stages[this.currentStage]["display"],
+            "stage": this.currentStage,
+            "test": this.currentTest,
+            "target color": `(${this.targetColor.join(",")})`,
+            "submitted color": `(${this.submittedColor.join(",")})`,
+            "grid clicks": this.numberOfGridClicks,
+            "block clicks": this.numberOfBlockClicks,
+            "strip clicks": this.numberOfStripClicks,
+            // "intermediate colors": ,
+            "time": this.time,
+        });
     }
 
     create_file(){
-        let csvContent = "data:text/csv;charset=utf-8," + this.add_headers();
-        this.data.forEach(function(round){
-            let row = round.join(",");
-            csvContent += row + "\r\n";
-        });
-        var encodedUri = encodeURI(csvContent);
-        window.open(encodedUri);
+        let encodedUri = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+        $("#results").attr("href", encodedUri);
+        $("#results").css("visibility", "visible");
     }
 }
