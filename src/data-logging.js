@@ -1,62 +1,34 @@
-var customColors = [],
-    adobeColors = [],
-    customOrder = [0,1,2,3,4],
-    adobeOrder = [0,1,2,3,4]
-
-function shuffle_array(arr){
-    arr.sort(() => Math.random() - 0.5);
-    return arr;
-}
-
-function sort_colors(colors, order){
-    let arr = [];
-    order.forEach(function(index){
-        arr.push(colors[index]);
-    });
-    return arr;
-}
-
 class Logger {
 
-    constructor(){
-        this.number_of_tests = 10;
-        this.current_test_num = 0;
+    constructor(stages){
         this.data = [];
-        this.targetColor = [];
+        this.stages = stages;
+        
+        this.nStages = stages.length;
+        this.nTests = stages[0]["colors"].length;
+
+        this.currentTest = 0;
+        this.currentStage = 0;
+
+        // Initialize data point values for each round
+        this.reset_values();
+    }
+
+    reset_values() {
         this.submittedColor = [];
         this.numberOfGridClicks = 0;
         this.numberOfBlockClicks = 0;
         this.numberOfStripClicks = 0;
-        this.numberOfBackClicks = 0;
         this.time = null;
-        this.displayMode = "custom";
-
-        // colors - going to uncomment for now
-        this.customOrder = shuffle_array(customOrder);
-        this.customColors = sort_colors(customColors, this.customOrder);
-        this.adobeOrder = shuffle_array(adobeOrder);
-        this.adobeColors = sort_colors(adobeColors, this.adobeOrder);
-    }
-
-    all_done(){
-        return this.number_of_tests == this.current_test_num;
     }
 
     set_time(time) {
         this.time = time / 1000;
     }
 
-    set_targetColor(color){
-        this.targetColor = color;
-    }
-
     set_submittedColor(color){
         let [r,g,b,,] = color;
         this.submittedColor = [r,g,b];
-    }
-
-    set_displayMode(mode){
-        this.displayMode = mode;
     }
 
     clicked_grid(){
@@ -71,27 +43,15 @@ class Logger {
         this.numberOfStripClicks += 1;
     }
 
-    clicked_back(){
-        this.numberOfBackClicks += 1;
-    }
-
-    start_round(){
-        this.new_round();
-        this.current_test_num += 1;
+    start_round(stage, test, color){
+        this.reset_values();
+        this.currentStage = stage;
+        this.currentTest = test;
+        this.targetColor = color;
     }
 
     stop_round(){
         this.update_data();
-    }
-
-    new_round(){
-        this.targetColor = [];
-        this.submittedColor = [];
-        this.numberOfGridClicks = 0;
-        this.numberOfBlockClicks = 0;
-        this.numberOfStripClicks = 0;
-        this.numberOfBackClicks = 0;
-        this.time = null;
     }
     
     /*
@@ -105,7 +65,6 @@ class Logger {
         number-of-grid-clicks: int,
         number-of-block-clicks: int,
         number-of-strip-clicks: int,
-        number-of-back-clicks: int,
         time: int,
         display-mode: [custom or adobe],
     }
@@ -115,7 +74,7 @@ class Logger {
         let string = "";
         string += "t-R,t-B,t-G,";
         string += "s-R,s-B,s-G,";
-        string += "grid-c,block-c,strip-c,back-c,";
+        string += "grid-c,block-c,strip-c,";
         string += "start-t,";
         string += "end-t,";
         string += "display,";
@@ -129,9 +88,8 @@ class Logger {
             this.numberOfGridClicks,
             this.numberOfBlockClicks,
             this.numberOfStripClicks,
-            this.numberOfBackClicks,
             this.time,
-            this.displayMode,
+            this.stages[this.currentStage]["display"],
         ]);
     }
 

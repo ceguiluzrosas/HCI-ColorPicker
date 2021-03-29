@@ -4,10 +4,24 @@ const rows = 5,
       cols = 5,
       startColor = '(255, 0, 0, 1)',
       minStepSize = 25,
-      rgbRandomness = 0.4,
-      hueRandomness = 0.1;
+      rgbRandomness = 0.2,
+      hueRandomness = 0.1,
+      nTests = 10,
+      testColors = randomColors(nTests),
+      displayOrder = shuffleArray(["adobe", "custom"]);
 
-var LOGGER = new Logger(),
+// Set up color tests for each display mode
+const stages = displayOrder.map((display) => {
+  let order = shuffleArray([...Array(nTests).keys()])
+  let colors = order.map(i => testColors[i]);
+  return {
+      "display": display,
+      "colors": colors
+  };
+})
+
+// Data Logger
+let LOGGER = new Logger(stages),
     time = null;
 
 // Color Block
@@ -31,12 +45,11 @@ let drag = false,
     originalStepSize = 50,
     stepSize = originalStepSize,
     stepChange = 0.75,
-    ditherType = "rgb",
     allSquares = {},
     touchedSquare = false,
     currentSquare = null,
-    stage_number = 1,
-    color_number = 0;
+    currentStage = 0,
+    currentTest = 0;
 
 // If the user clicks somewhere in the color-block, then enable drag and
 // change the color.
@@ -74,47 +87,10 @@ $(colorStrip).click(function(e){
   fillGradient(rgbaColor);
 });
 
-$('input[type=radio][name=display]').change(function() {
-  LOGGER.set_displayMode(this.value);
-  switch (this.value) {
-    case "custom": {
-      $(".custom").show();
-      $(".not-middle").css('visibility', 'visible'); 
-      break;
-    }
-    case "adobe": {
-      $(".custom").hide(); 
-      $(".not-middle").css('visibility', 'hidden'); 
-      // $(".not-middle").hide() moves middle-square to top left of grid
-      break;
-    }
-  }
-});
-
-// Assuming the user has already touched a square, if they 
-// want to revert their decision, they can do so. The step size
-// will go revert to the previous stepSize and the button will be 
-// disabled again.
-$('#goBack').click(function(e){
-  if (touchedSquare && stepSize * 1/stepChange <= originalStepSize){
-    stepSize *= 1/stepChange;
-    $('#stepSize').val(stepSize);
-    x = prevX;
-    y = prevY;
-    changeGridAccordingToBlock();
-    LOGGER.clicked_back(); 
-  } else {
-    alert("You either haven't touched a square yet or the step-size is bigger than the original");
-  }
-})
-
 // User is finished selecting a color
 $('#compare').click(function(e){
-  let [r,g,b,,] = allSquares[getCenterSquare()];
-  $('#userColor').css('background-color', `rgba(${r},${g},${b},1)`);
-  $('#userColor').css('border', 'black solid thin');
-  $('#targetColor').css('border-right', 'none');
-  $('#userColor').css('border-left', 'none');
+  let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
+  compareColor(r,g,b);
 })
 
 function disable_buttons(pressedStart){
@@ -125,24 +101,38 @@ function disable_buttons(pressedStart){
 
 // User has clicked start
 $('#start').click(function(e){
-  LOGGER.start_round();
-  time = new Date().getTime();
-  randomTarget();
-  LOGGER.set_targetColor(targetColor);
+  $("#stage-number").text(currentStage+1);
+  $("#color-number").text(currentTest+1);
+  setDisplayMode(stages[currentStage]["display"]);
+  let color = stages[currentStage]["colors"][currentTest];
+  LOGGER.start_round(currentStage, currentTest, color);
+  setTargetColor(color);
   disable_buttons(true);
+  time = new Date().getTime();
 })
 
 // Let user pick new color
 $('#submit').click(function(e){
-  var time_elapsed = new Date().getTime() - time;
+  let time_elapsed = new Date().getTime() - time;
+  disable_buttons(false);
+  let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
+  compareColor(r,g,b);
   LOGGER.set_submittedColor(allSquares[getCenterSquare()]);
   LOGGER.set_time(time_elapsed);
   LOGGER.stop_round();
-  if (LOGGER.all_done()){
-    LOGGER.create_file();
-  }   
-  $("#color-number").text(++color_number);
-  disable_buttons(false);
+  if (currentTest == nTests-1){
+    if (currentStage == stages.length-1){
+      LOGGER.create_file();
+      $("button").prop("disabled", true);
+    }
+    else {
+      currentTest = 0;
+      currentStage++;
+    }
+  }
+  else {
+    currentTest++;
+  }
 })
 
 // If the user clicks a square, adjust the stepsize, and update the grid. 
@@ -185,10 +175,14 @@ $('body').keyup(function(e){
 
 
 // Initialize UI
+$("#total-test-number").text(testColors.length);
 
 // Display current stage
-$("#stage-number").text(stage_number);
-$("#color-number").text(color_number);
+$("#stage-number").text(currentStage+1);
+$("#color-number").text(currentTest+1);
+setDisplayMode(stages[currentStage]["display"]);
+
+// $("button").prop("disabled", true);
 
 // Apply Colors to Strip and Block
 blockCtx.rect(0, 0, blockWidth, blockHeight);
