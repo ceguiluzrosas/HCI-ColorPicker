@@ -15,10 +15,12 @@ class Logger {
     }
 
     reset_values() {
-        this.submittedColor = [];
+        this.selectedColors = [];
+        this.submittedColor = null;
         this.numberOfGridClicks = 0;
         this.numberOfBlockClicks = 0;
         this.numberOfStripClicks = 0;
+        this.numberOfCompareClicks = 0;
         this.time = null;
     }
 
@@ -26,9 +28,16 @@ class Logger {
         this.time = time / 1000;
     }
 
+    selected_color(color){
+        if (!this.submittedColor) {
+            let [r,g,b,,] = color;
+            this.selectedColors.push(`(${r},${g},${b})`);
+        }
+    }
+
     set_submittedColor(color){
         let [r,g,b,,] = color;
-        this.submittedColor = [r,g,b];
+        this.submittedColor = `(${r},${g},${b})`;
     }
 
     clicked_grid(){
@@ -43,11 +52,15 @@ class Logger {
         this.numberOfStripClicks += 1;
     }
 
+    clicked_compare(){
+        this.numberOfCompareClicks += 1;
+    }
+
     start_round(stage, test, color){
         this.reset_values();
         this.currentStage = stage;
         this.currentTest = test;
-        this.targetColor = color;
+        this.targetColor = `(${color.join(",")})`;
     }
 
     stop_round(){
@@ -61,9 +74,11 @@ class Logger {
         test: int,
         target color: (r,g,b),
         submitted color: (r,g,b),
+        selected colors: [(r,g,b)],
         grid clicks: int,
         block clicks: int,
         strip clicks: int,
+        compare clicks: int,
         time: int,
     }
     */
@@ -73,12 +88,13 @@ class Logger {
             "display mode": this.stages[this.currentStage]["display"],
             "stage": this.currentStage,
             "test": this.currentTest,
-            "target color": `(${this.targetColor.join(",")})`,
-            "submitted color": `(${this.submittedColor.join(",")})`,
+            "target color": this.targetColor,
+            "submitted color": this.submittedColor,
+            "selected colors": this.selectedColors,
             "grid clicks": this.numberOfGridClicks,
             "block clicks": this.numberOfBlockClicks,
             "strip clicks": this.numberOfStripClicks,
-            // "intermediate colors": ,
+            "compare clicks": this.numberOfCompareClicks,
             "time": this.time,
         });
     }

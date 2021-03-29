@@ -238,7 +238,7 @@ function incrementStep(step){
 }
 
 // Changes the grid according to the block that the user selects.
-function changeGridAccordingToBlock(r=null, g=null, b=null){
+function changeGridAccordingToBlock(LOGGER=null, r=null, g=null, b=null){
   // Make sure we aren't out of bounds
   [x,y] = boundXY(x,y);
   if (!r && !g && !b) { [r,g,b] = getRGBFromBlock(x, y); }
@@ -255,6 +255,7 @@ function changeGridAccordingToBlock(r=null, g=null, b=null){
     stepX = incrementStep(stepX);
   }
   updateSquares();
+  if (LOGGER) { LOGGER.selected_color(allSquares[getCenterSquare()]); }
 }
 
 // Changes the grid layout by hiding some squares and other not.

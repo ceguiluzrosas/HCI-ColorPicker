@@ -49,8 +49,6 @@ let drag = false,
     stepSize = originalStepSize,
     stepChange = 0.75,
     allSquares = {},
-    touchedSquare = false,
-    currentSquare = null,
     currentStage = 0,
     currentTest = 0;
 
@@ -62,11 +60,11 @@ $(colorBlock).mousedown(function(e){
   $('#stepSize').val(stepSize);
   x = e.offsetX;
   y = e.offsetY;
-  changeGridAccordingToBlock(); 
 });
 
 // If the user is/continues dragging in the color-block, then change the color.
 $(colorBlock).mouseup(function(){
+  changeGridAccordingToBlock(LOGGER); 
   LOGGER.clicked_block();
   drag = false;
 });
@@ -90,8 +88,9 @@ $(colorStrip).click(function(e){
   fillGradient(rgbaColor);
 });
 
-// User is finished selecting a color
+// User is comparing the selected color to the target color
 $('#compare').click(function(e){
+  LOGGER.clicked_compare();
   let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
   compareColor(r,g,b);
 })
@@ -150,26 +149,20 @@ $('#submit').click(function(e){
 // If the user clicks a square, adjust the stepsize, and update the grid. 
 // Also keep track of the previous values. 
 $('.square').click(function(e){
-  LOGGER.clicked_grid();
-  touchedSquare = true;
-  let [r,g,b,,] = allSquares[e.target.id];
-  changeBlockAccordingToRGB(r, g, b);
-  prevX = x;
-  prevY = y;
-  [x, y] = getXYFromRGB([r,g,b]);
-  stepSize *= stepChange;
-  // Lower bound the step size
-  stepSize = Math.max(stepSize, minStepSize);
-  $('#stepSize').val(stepSize);
-  changeGridAccordingToBlock(r, g, b);
+  if (stages[currentStage]["display"] == "custom") {
+    LOGGER.clicked_grid();
+    let [r,g,b,,] = allSquares[e.target.id];
+    changeBlockAccordingToRGB(r, g, b);
+    prevX = x;
+    prevY = y;
+    [x, y] = getXYFromRGB([r,g,b]);
+    stepSize *= stepChange;
+    // Lower bound the step size
+    stepSize = Math.max(stepSize, minStepSize);
+    $('#stepSize').val(stepSize);
+    changeGridAccordingToBlock(LOGGER, r, g, b);
+  }
 });
-
-// As the user hovers over the squares, keep watch of which one
-// they are currently hovering over.
-$('.square').hover(function(e){
-  currentSquare = e.target.id;
-})
-
 
 // Initialize UI
 $("#total-test-number").text(testColors.length);
