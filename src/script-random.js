@@ -22,8 +22,7 @@ const rows = 5,
       nTests = 10,
       testColors = randomColors(nTests),
       xStart = blockWidth/2,
-      yStart = blockHeight/2,
-      displayOrder = shuffleArray(["adobe", "custom"]);
+      yStart = blockHeight/2;
 
 // Set up color tests for each display mode
 const stages = displayOrder.map((display) => {
