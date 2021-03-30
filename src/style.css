@@ -85,3 +85,16 @@ canvas:hover {
   pointer-events: none;
   z-index: 1;
 }
+
+.color-strip-cursor {
+  top: -5px;
+  position: absolute;
+}
+
+#color-strip-left {
+  right: 45px;
+}
+
+#color-strip-right {
+  right: 10px;
+}

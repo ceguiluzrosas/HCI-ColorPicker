@@ -109,11 +109,11 @@ function getXYFromRGB(rgb){
   return bestXY;
 }
 
-function clearCursor(){
+function clearBlockCursor(){
   cursorCtx.clearRect(0, 0, blockWidth, blockHeight);
 }
 
-function drawCursor(x,y){
+function drawBlockCursor(x,y){
   cursorCtx.beginPath();
   cursorCtx.arc(x, y, cursorSize, 0, Math.PI*2, false);
   let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
@@ -130,6 +130,28 @@ function drawCursor(x,y){
     cursorCtx.strokeStyle = (v > cursorThreshold && s < 1 - cursorThreshold) ? "black" : "white";
   }
   cursorCtx.stroke();
+}
+
+function clearStripCursor(){
+  leftCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
+  rightCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
+}
+
+function drawStripCursor(y){
+  leftCtx.fillStyle = "white";
+  leftCtx.beginPath();
+  yOffset = y + (stripCursorHeight - stripHeight)/2;
+  leftCtx.moveTo(stripCursorWidth, yOffset);
+  leftCtx.lineTo(0, yOffset-stripCursorWidth);
+  leftCtx.lineTo(0, yOffset+stripCursorWidth);
+  leftCtx.fill();
+
+  rightCtx.fillStyle = "white";
+  rightCtx.beginPath();
+  rightCtx.moveTo(0, yOffset);
+  rightCtx.lineTo(stripCursorWidth, yOffset-stripCursorWidth);
+  rightCtx.lineTo(stripCursorWidth, yOffset+stripCursorWidth);
+  rightCtx.fill();
 }
 
 // Color the color-block with gradients.

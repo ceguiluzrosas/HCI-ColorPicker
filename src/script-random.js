@@ -12,7 +12,13 @@ const colorBlock = $('#color-block').get(0),
 const colorStrip = $('#color-strip').get(0),
       stripCtx = colorStrip.getContext('2d'),
       stripWidth = colorStrip.width,
-      stripHeight = colorStrip.height;
+      stripHeight = colorStrip.height,
+      colorStripLeft = $('#color-strip-left').get(0),
+      leftCtx = colorStripLeft.getContext('2d'),
+      colorStripRight = $('#color-strip-right').get(0),
+      rightCtx = colorStripRight.getContext('2d'),
+      stripCursorWidth = colorStripLeft.width,
+      stripCursorHeight = colorStripLeft.height;
 
 // General constants
 const rows = 5,
@@ -43,7 +49,8 @@ let LOGGER = new Logger(stages),
     time = null;
 
 // Initialize variables
-let drag = false,
+let blockDrag = false,
+    stripDrag = false,
     x = xStart,
     y = yStart,
     prevX = blockWidth/2,
@@ -59,8 +66,8 @@ let drag = false,
 // change the color.
 $(colorBlock).mousedown(function(e){
   // Clear any existing cursor
-  clearCursor();
-  drag = true;
+  clearBlockCursor();
+  blockDrag = true;
   stepSize = originalStepSize;
   $('#stepSize').val(stepSize);
   x = e.offsetX;
@@ -71,30 +78,55 @@ $(colorBlock).mousedown(function(e){
 $(colorBlock).mouseup(function(e){
   changeGridAccordingToBlock(LOGGER); 
   LOGGER.clicked_block();
-  drag = false;
+  blockDrag = false;
   // Draw new cursor
-  drawCursor(x,y);
+  drawBlockCursor(x,y);
 });
 
 $(colorBlock).mousemove(function(e){
-  if (drag) { 
+  if (blockDrag) { 
     x = e.offsetX;
     y = e.offsetY;
     changeGridAccordingToBlock(); 
   }
 });
 
-// If the user clicks on the color strip, then change the color block.
-$(colorStrip).click(function(e){
-  LOGGER.clicked_strip();
-  // Clear cursor
-  clearCursor();
-  // Change block
+// If the user clicks somewhere in the color strip, then enable drag and
+// change the color block.
+$(colorStrip).mousedown(function(e){
+  // Clear block cursor
+  clearBlockCursor();
+  stripDrag = true;
   x = e.offsetX;
-  y = e.offsetY;
+  y = Math.min(stripHeight-1, Math.max(0, e.offsetY));
+  // Draw new cursor
+  clearStripCursor();
+  drawStripCursor(y);
+});
+
+// If the user is/continues dragging in the color strip, then change the color block.
+$(colorStrip).mouseup(function(e){
+  LOGGER.clicked_strip();
   let imageData = stripCtx.getImageData(x, y, 1, 1).data;
   rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
   fillGradient(rgbaColor);
+  stripDrag = false;
+  // Draw new cursor
+  clearStripCursor();
+  drawStripCursor(y);
+});
+
+$(colorStrip).mousemove(function(e){
+  if (stripDrag) { 
+    x = e.offsetX;
+    y = Math.min(stripHeight-1, Math.max(0, e.offsetY));
+    let imageData = stripCtx.getImageData(x, y, 1, 1).data;
+    rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
+    fillGradient(rgbaColor);
+    // Draw new cursor
+    clearStripCursor();
+    drawStripCursor(y);
+  }
 });
 
 // User is comparing the selected color to the target color
@@ -192,7 +224,7 @@ fillGradient(startColor);
 changeGridAccordingToBlock();
 
 // Draw cursor
-drawCursor(x,y);
+drawBlockCursor(x,y);
 
 // Create sample JSON download link for testing
 let sampleJSON = {
