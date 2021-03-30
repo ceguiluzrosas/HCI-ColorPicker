@@ -4,7 +4,9 @@
 const colorBlock = $('#color-block').get(0),
       blockCtx = colorBlock.getContext('2d'),
       blockWidth = colorBlock.width,
-      blockHeight = colorBlock.height;
+      blockHeight = colorBlock.height,
+      colorBlockCursor = $('#color-block-cursor').get(0),
+      cursorCtx = colorBlockCursor.getContext('2d');
 
 // Color Strip
 const colorStrip = $('#color-strip').get(0),
@@ -18,11 +20,13 @@ const rows = 5,
       startColor = '(255, 0, 0, 1)',
       minStepSize = 25,
       rgbRandomness = 0.2,
-      hueRandomness = 0.1,
+      hueRandomness = 0.15,
       nTests = 10,
       testColors = randomColors(nTests),
       xStart = blockWidth/2,
-      yStart = blockHeight/2;
+      yStart = blockHeight/2,
+      cursorSize = 5,
+      cursorThreshold = 0.7;
 
 // Set up color tests for each display mode
 const stages = displayOrder.map((display) => {
@@ -54,6 +58,8 @@ let drag = false,
 // If the user clicks somewhere in the color-block, then enable drag and
 // change the color.
 $(colorBlock).mousedown(function(e){
+  // Clear any existing cursor
+  clearCursor();
   drag = true;
   stepSize = originalStepSize;
   $('#stepSize').val(stepSize);
@@ -62,10 +68,12 @@ $(colorBlock).mousedown(function(e){
 });
 
 // If the user is/continues dragging in the color-block, then change the color.
-$(colorBlock).mouseup(function(){
+$(colorBlock).mouseup(function(e){
   changeGridAccordingToBlock(LOGGER); 
   LOGGER.clicked_block();
   drag = false;
+  // Draw new cursor
+  drawCursor(x,y);
 });
 
 $(colorBlock).mousemove(function(e){
@@ -79,11 +87,13 @@ $(colorBlock).mousemove(function(e){
 // If the user clicks on the color strip, then change the color block.
 $(colorStrip).click(function(e){
   LOGGER.clicked_strip();
+  // Clear cursor
+  clearCursor();
+  // Change block
   x = e.offsetX;
   y = e.offsetY;
   let imageData = stripCtx.getImageData(x, y, 1, 1).data;
   rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
-  //console.log(`strip click: ${rgbaColor}`);
   fillGradient(rgbaColor);
 });
 
@@ -180,6 +190,9 @@ fillStrip();
 // Initialize grid
 fillGradient(startColor);
 changeGridAccordingToBlock();
+
+// Draw cursor
+drawCursor(x,y);
 
 // Create sample JSON download link for testing
 let sampleJSON = {

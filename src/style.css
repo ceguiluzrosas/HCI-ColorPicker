@@ -4,6 +4,7 @@ body {
   padding: 0%;
   background-color: #535353;
 }
+
 h1 {
   color: white;
   padding-top: 1rem;
@@ -36,10 +37,6 @@ input[type=radio] {
   margin: 10px;
 }
 
-canvas:hover {
-  cursor: url("cursor.png") 10 10, auto;
-}
-
 #targetContainer {
   padding: 1rem;
 }
@@ -68,4 +65,23 @@ a {
 
 #results {
   visibility: hidden;
+}
+
+canvas:hover {
+  cursor: url("cursor.png") 10 10, auto;
+}
+
+.canvas-layer {
+  position: absolute;
+  top: 0;
+  right: 60px;
+}
+
+#color-block {
+  z-index: 0;
+}
+
+#color-block-cursor {
+  pointer-events: none;
+  z-index: 1;
 }

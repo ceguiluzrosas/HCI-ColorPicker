@@ -109,6 +109,29 @@ function getXYFromRGB(rgb){
   return bestXY;
 }
 
+function clearCursor(){
+  cursorCtx.clearRect(0, 0, blockWidth, blockHeight);
+}
+
+function drawCursor(x,y){
+  cursorCtx.beginPath();
+  cursorCtx.arc(x, y, cursorSize, 0, Math.PI*2, false);
+  let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
+  let [h,s,v] = RGBToHSV(r,g,b);
+  // Clever logic to adjust the cursor color so it contrasts against the background
+  if (h > 0.1 && h < 0.6) { 
+    // For lighter hue values (orange > yellow > green > cyan) 
+    // we can just threshold with the value (upper region of block turns the cursor black)
+    cursorCtx.strokeStyle = v > cursorThreshold ? "black" : "white";
+  }
+  else {
+    // For darker hue values (blue > purple > magenta > red + grayscale block) 
+    // we need to threshold with the saturation value (only white corner turns the cursor black)
+    cursorCtx.strokeStyle = (v > cursorThreshold && s < 1 - cursorThreshold) ? "black" : "white";
+  }
+  cursorCtx.stroke();
+}
+
 // Color the color-block with gradients.
 function fillGradient(rgbaColor){
   blockCtx.clearRect(0, 0, blockWidth, blockHeight);
