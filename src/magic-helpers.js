@@ -1,13 +1,68 @@
-// Canvas Color Picker based on https://codepen.io/pizza3/pen/BVzYNP
+// Canvas Color Picker (i.e. adobe mode) based on https://codepen.io/pizza3/pen/BVzYNP
+function setDisplayMode(display){
+  switch (display) {
+    case "custom": {
+      $(".custom").show();
+      $(".not-middle").css('visibility', 'visible'); 
+      break;
+    }
+    case "adobe": {
+      $(".custom").hide(); 
+      $(".not-middle").css('visibility', 'hidden'); 
+      break;
+    }
+  }
+}
+
+// Fisher-Yates (aka Knuth) Shuffle
+// Source: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffleArray(arr){
+  let array = [...arr];
+  let currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
 
 
 // Generate a random color for the target
-function randomTarget(){
-  var r = Math.floor(Math.random() * 226),
-      g = Math.floor(Math.random() * 226),
-      b = Math.floor(Math.random() * 226);
+function randomColors(n){
+  let colors = []
+  for (let i=0; i<n; i++) {
+    colors.push([
+      Math.floor(Math.random() * 226), // r
+      Math.floor(Math.random() * 226), // g
+      Math.floor(Math.random() * 226)  // b
+    ]);
+  }
+  return colors;
+}
+
+function setTargetColor(color){
+  let [r,g,b] = color;
+  $('#targetColor').css('visibility', 'visible');
   $('#targetColor').css('background-color', `rgba(${r},${g},${b},1)`);
   targetColor = [r,g,b];
+}
+
+function compareColor(r,g,b){
+  $('#userColor').css('visibility', 'visible');
+  $('#userColor').css('background-color', `rgba(${r},${g},${b},1)`);
+  $('#userColor').css('border', 'black solid thin');
+  $('#targetColor').css('border-right', 'none');
+  $('#userColor').css('border-left', 'none');
 }
 
 
@@ -30,7 +85,7 @@ function getRGBDiff(rgb1, rgb2){
 // Find [x,y] location on canvas given [r,g,b], ASSUMING THAT hue of canvas is set correctly.
 function getXYFromRGB(rgb){
   if (rgb == [0,0,0]) { return [0, blockHeight-1]; }
-  [,s,v] = RGBToHSV(...rgb);
+  let [,s,v] = RGBToHSV(...rgb);
   // Estimate x,y location using s,v values
   est_x = Math.round((s) * (blockWidth-1));
   est_y = Math.round((1-v) * (blockHeight-1));
@@ -54,8 +109,54 @@ function getXYFromRGB(rgb){
   return bestXY;
 }
 
+function clearBlockCursor(){
+  cursorCtx.clearRect(0, 0, blockWidth, blockHeight);
+}
+
+function drawBlockCursor(x,y){
+  cursorCtx.beginPath();
+  cursorCtx.arc(x, y, cursorSize, 0, Math.PI*2, false);
+  let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
+  let [h,s,v] = RGBToHSV(r,g,b);
+  // Clever logic to adjust the cursor color so it contrasts against the background
+  if (h > 0.1 && h < 0.6) { 
+    // For lighter hue values (orange > yellow > green > cyan) 
+    // we can just threshold with the value (upper region of block turns the cursor black)
+    cursorCtx.strokeStyle = v > cursorThreshold ? "black" : "white";
+  }
+  else {
+    // For darker hue values (blue > purple > magenta > red + grayscale block) 
+    // we need to threshold with the saturation value (only white corner turns the cursor black)
+    cursorCtx.strokeStyle = (v > cursorThreshold && s < 1 - cursorThreshold) ? "black" : "white";
+  }
+  cursorCtx.stroke();
+}
+
+function clearStripCursor(){
+  leftCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
+  rightCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
+}
+
+function drawStripCursor(y){
+  leftCtx.fillStyle = "white";
+  leftCtx.beginPath();
+  yOffset = y + (stripCursorHeight - stripHeight)/2;
+  leftCtx.moveTo(stripCursorWidth, yOffset);
+  leftCtx.lineTo(0, yOffset-stripCursorWidth);
+  leftCtx.lineTo(0, yOffset+stripCursorWidth);
+  leftCtx.fill();
+
+  rightCtx.fillStyle = "white";
+  rightCtx.beginPath();
+  rightCtx.moveTo(0, yOffset);
+  rightCtx.lineTo(stripCursorWidth, yOffset-stripCursorWidth);
+  rightCtx.lineTo(stripCursorWidth, yOffset+stripCursorWidth);
+  rightCtx.fill();
+}
+
 // Color the color-block with gradients.
 function fillGradient(rgbaColor){
+  blockCtx.clearRect(0, 0, blockWidth, blockHeight);
   blockCtx.fillStyle = rgbaColor;
   blockCtx.fillRect(0, 0, blockWidth, blockHeight);
 
@@ -79,7 +180,7 @@ function fillGradient(rgbaColor){
 // Set color-block color by extracting hue
 function changeBlockAccordingToRGB(r, g, b){
   // Get hue and saturation from rgb
-  [h,s,] = RGBToHSV(r,g,b);
+  let [h,s,] = RGBToHSV(r,g,b);
   if (s == 0) { [r,g,b] = [0,0,0]; }
   else { [r,g,b] = HSVToRGB(h,1,1); }
   rgbaColor = `rgba(${r},${g},${b},1)`;
@@ -90,6 +191,7 @@ function changeBlockAccordingToRGB(r, g, b){
 // ✨ Color Strip Magic ✨
 
 function fillStrip(){
+  stripCtx.clearRect(0, 0, stripWidth, stripHeight);
   let gradient = stripCtx.createLinearGradient(0, 0, 0, blockHeight);
   gradient.addColorStop(1, 'rgba(255, 0, 0, 1)');
   gradient.addColorStop(0.85, 'rgba(255, 255, 0, 1)');
@@ -126,20 +228,29 @@ function randomMath(number, randomness){
 
 // RGB input and output
 function rgbDither(rgb){
-  [r,g,b] = rgb;
+  let [r,g,b] = rgb,
+      randomness = rgbRandomness;
   return [
-    randomMath(r, rgbRandomness),
-    randomMath(g, rgbRandomness),
-    randomMath(b, rgbRandomness)
+    randomMath(r, randomness),
+    randomMath(g, randomness),
+    randomMath(b, randomness)
   ];
 }
 
 // RGB input and output
 function hueDither(rgb){
-  [h,s,v] = RGBToHSV(...rgb);
-  let _h = h + (Math.random() * hueRandomness - hueRandomness/2);
+  let [h,s,v] = RGBToHSV(...rgb),
+      randomness = hueRandomness * s;
+  let _h = h + (Math.random() * randomness - randomness/2);
   if (_h < 0) { _h++; }
   return HSVToRGB(_h,s,v);
+}
+
+// First randomly dither the color's rgb value
+// Then, based on saturation, dither the color's hue 
+// (higher saturation colors have more hue dithering)
+function dither(rgb){
+  return hueDither(rgbDither(rgb));
 }
 
 // Get the exact RGB value and then randomly dither the hue
@@ -147,11 +258,8 @@ function getSquareColor(x, y, stepX, stepY){
   let _x = fancyMath(x, stepX),
       _y = fancyMath(y, stepY),
       [_r,_g,_b] = getRGBFromBlock(_x,_y);
-  switch (ditherType) {
-    case "hue": [_r,_g,_b] = hueDither([_r,_g,_b]); break;
-    case "rgb": [_r,_g,_b] = rgbDither([_r,_g,_b]); break;
-  }
-  return [_r,_g,_b,_x,_y];
+  let [r,g,b] = dither([_r,_g,_b]);
+  return [r,g,b,_x,_y];
 }
 
 function getCenterSquare(){
@@ -164,7 +272,7 @@ function isCenterSquare(row, col){
 
 function updateSquares(){
   for (let square in allSquares) {
-    [r,g,b,,] = allSquares[square];
+    let [r,g,b,,] = allSquares[square];
     $(`#${square}`).css('background-color', `rgba(${r},${g},${b},1)`);
   }
 }
@@ -175,12 +283,12 @@ function incrementStep(step){
 }
 
 // Changes the grid according to the block that the user selects.
-function changeGridAccordingToBlock(r=null, g=null, b=null){
-  let stepX = -stepSize*2,
-      stepY = -stepSize*2;
+function changeGridAccordingToBlock(LOGGER=null, r=null, g=null, b=null){
   // Make sure we aren't out of bounds
   [x,y] = boundXY(x,y);
   if (!r && !g && !b) { [r,g,b] = getRGBFromBlock(x, y); }
+  let stepX = -stepSize*2,
+      stepY = -stepSize*2;
   // Assign grid colors
   for (let row=0; row<rows; row++){
     for (let col=0; col<cols; col++){
@@ -192,6 +300,7 @@ function changeGridAccordingToBlock(r=null, g=null, b=null){
     stepX = incrementStep(stepX);
   }
   updateSquares();
+  if (LOGGER) { LOGGER.selected_color(allSquares[getCenterSquare()]); }
 }
 
 // Changes the grid layout by hiding some squares and other not.

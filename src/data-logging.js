@@ -1,79 +1,43 @@
-var customColors = [],
-    adobeColors = [],
-    customOrder = [0,1,2,3,4],
-    adobeOrder = [0,1,2,3,4]
-
-function shuffle_array(arr){
-    arr.sort(() => Math.random() - 0.5);
-    return arr;
-}
-
-function sort_colors(colors, order){
-    let arr = [];
-    order.forEach(function(index){
-        arr.push(colors[index]);
-    });
-    return arr;
-}
-
 class Logger {
 
-    constructor(){
-        this.number_of_tests = 10;
-        this.current_test_num = 0;
+    constructor(stages){
         this.data = [];
-        this.targetColor = [];
-        this.submittedColor = [];
+        this.stages = stages;
+        
+        this.nStages = stages.length;
+        this.nTests = stages[0]["colors"].length;
+
+        this.currentTest = 0;
+        this.currentStage = 0;
+
+        // Initialize data point values for each round
+        this.reset_values();
+    }
+
+    reset_values() {
+        this.selectedColors = [];
+        this.submittedColor = null;
         this.numberOfGridClicks = 0;
         this.numberOfBlockClicks = 0;
         this.numberOfStripClicks = 0;
-        this.numberOfBackClicks = 0;
+        this.numberOfCompareClicks = 0;
         this.time = null;
-        this.displayMode = "custom";
-
-        // colors - going to uncomment for now
-        this.customOrder = shuffle_array(customOrder);
-        this.customColors = sort_colors(customColors, this.customOrder);
-        this.adobeOrder = shuffle_array(adobeOrder);
-        this.adobeColors = sort_colors(adobeColors, this.adobeOrder);
-
-        // unsure - but will keep here for now
-        this.targetBGColor = "white";
-        this.ditherType = "none";
-        this.initialStepSize = 50;
-        this.initialStepChange = 0.75;
-    }
-
-    all_done(){
-        return this.number_of_tests == this.current_test_num;
-    }
-
-    set_ditherType(type){
-        this.ditherType = type;
     }
 
     set_time(time) {
         this.time = time / 1000;
     }
 
-    set_targetBGColor(color){
-        this.targetBGColor = color;
-    }
-
-    set_targetColor(color){
-        this.targetColor = color;
+    selected_color(color){
+        if (!this.submittedColor) {
+            let [r,g,b,,] = color;
+            this.selectedColors.push(`(${r},${g},${b})`);
+        }
     }
 
     set_submittedColor(color){
         let [r,g,b,,] = color;
-        this.submittedColor = [r,g,b];
-    }
-
-    set_displayMode(mode){
-        this.displayMode = mode;
-        if (mode == "custom"){
-            this.ditherType = "n/a"
-        }
+        this.submittedColor = `(${r},${g},${b})`;
     }
 
     clicked_grid(){
@@ -88,87 +52,56 @@ class Logger {
         this.numberOfStripClicks += 1;
     }
 
-    clicked_back(){
-        this.numberOfBackClicks += 1;
+    clicked_compare(){
+        this.numberOfCompareClicks += 1;
     }
 
-    start_round(){
-        this.new_round();
-        this.current_test_num += 1;
+    start_round(stage, test, color){
+        this.reset_values();
+        this.currentStage = stage;
+        this.currentTest = test;
+        this.targetColor = `(${color.join(",")})`;
     }
 
     stop_round(){
         this.update_data();
     }
-
-    new_round(){
-        this.targetColor = [];
-        this.submittedColor = [];
-        this.numberOfGridClicks = 0;
-        this.numberOfBlockClicks = 0;
-        this.numberOfStripClicks = 0;
-        this.numberOfBackClicks = 0;
-        this.time = null;
-    }
     
     /*
     {
-        target-color-r: int,
-        target-color-g: int,
-        target-color-b: int,
-        submitted-color-r: int,
-        submitted-color-g: int,
-        submitted-color-b: int,
-        number-of-grid-clicks: int,
-        number-of-block-clicks: int,
-        number-of-strip-clicks: int,
-        number-of-back-clicks: int,
+        display mode: [custom or adobe],
+        stage: int,
+        test: int,
+        target color: (r,g,b),
+        submitted color: (r,g,b),
+        selected colors: [(r,g,b)],
+        grid clicks: int,
+        block clicks: int,
+        strip clicks: int,
+        compare clicks: int,
         time: int,
-        display-mode: [custom or adobe],
-        target-bg-color: [white or grey],
-        dither-type: [none, rgb, or hue],
-
-        // unsure - but will keep here for now
-        initial-step-size: decimal,
-        initial-step-change: decimal,
     }
     */
 
-    add_headers(){
-        let string = "";
-        string += "t-R,t-B,t-G,";
-        string += "s-R,s-B,s-G,";
-        string += "grid-c,block-c,strip-c,back-c,";
-        string += "start-t,";
-        string += "end-t,";
-        string += "display,";
-        string += "t-BG,";
-        string += "dither,";
-        return string + "\r\n";
-    }
-
     update_data(){
-        this.data.push([
-            this.targetColor[0], this.targetColor[1], this.targetColor[2],
-            this.submittedColor[1], this.submittedColor[1], this.submittedColor[2],
-            this.numberOfGridClicks,
-            this.numberOfBlockClicks,
-            this.numberOfStripClicks,
-            this.numberOfBackClicks,
-            this.time,
-            this.displayMode,
-            this.targetBGColor,
-            this.ditherType
-        ]);
+        this.data.push({
+            "display mode": this.stages[this.currentStage]["display"],
+            "stage": this.currentStage,
+            "test": this.currentTest,
+            "target color": this.targetColor,
+            "submitted color": this.submittedColor,
+            "selected colors": this.selectedColors,
+            "grid clicks": this.numberOfGridClicks,
+            "block clicks": this.numberOfBlockClicks,
+            "strip clicks": this.numberOfStripClicks,
+            "compare clicks": this.numberOfCompareClicks,
+            "time": this.time,
+        });
     }
 
     create_file(){
-        let csvContent = "data:text/csv;charset=utf-8," + this.add_headers();
-        this.data.forEach(function(round){
-            let row = round.join(",");
-            csvContent += row + "\r\n";
-        });
-        var encodedUri = encodeURI(csvContent);
-        window.open(encodedUri);
+        let encodedUri = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+        $("#results").attr("href", encodedUri);
+        $("#results").css("visibility", "visible");
     }
 }

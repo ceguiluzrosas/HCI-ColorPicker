@@ -1,157 +1,139 @@
 // Initialize constants
 
-const rows = 5,
-      cols = 5,
-      startColor = '(255, 0, 0, 1)',
-      minStepSize = 25,
-      rgbRandomness = 0.4,
-      hueRandomness = 0.1;
-
-var LOGGER = new Logger(),
-    time = null;
-
 // Color Block
 const colorBlock = $('#color-block').get(0),
       blockCtx = colorBlock.getContext('2d'),
       blockWidth = colorBlock.width,
-      blockHeight = colorBlock.height;
+      blockHeight = colorBlock.height,
+      colorBlockCursor = $('#color-block-cursor').get(0),
+      cursorCtx = colorBlockCursor.getContext('2d');
 
 // Color Strip
 const colorStrip = $('#color-strip').get(0),
       stripCtx = colorStrip.getContext('2d'),
       stripWidth = colorStrip.width,
-      stripHeight = colorStrip.height;
+      stripHeight = colorStrip.height,
+      colorStripLeft = $('#color-strip-left').get(0),
+      leftCtx = colorStripLeft.getContext('2d'),
+      colorStripRight = $('#color-strip-right').get(0),
+      rightCtx = colorStripRight.getContext('2d'),
+      stripCursorWidth = colorStripLeft.width,
+      stripCursorHeight = colorStripLeft.height;
+
+// General constants
+const rows = 5,
+      cols = 5,
+      startColor = '(255, 0, 0, 1)',
+      minStepSize = 25,
+      rgbRandomness = 0.2,
+      hueRandomness = 0.15,
+      nTests = 10,
+      testColors = randomColors(nTests),
+      xStart = blockWidth/2,
+      yStart = blockHeight/2,
+      cursorSize = 5,
+      cursorThreshold = 0.7;
+
+// Set up color tests for each display mode
+const stages = displayOrder.map((display) => {
+  let order = shuffleArray([...Array(nTests).keys()])
+  let colors = order.map(i => testColors[i]);
+  return {
+      "display": display,
+      "colors": colors
+  };
+})
+
+// Data Logger
+let LOGGER = new Logger(stages),
+    time = null;
 
 // Initialize variables
-let drag = false,
-    x = blockWidth/2,
-    y = blockHeight/2,
+let blockDrag = false,
+    stripDrag = false,
+    x = xStart,
+    y = yStart,
     prevX = blockWidth/2,
     prevY = blockHeight/2,
-    originalStepSize = parseInt($('#stepSize').get(0).value),
+    originalStepSize = 50,
     stepSize = originalStepSize,
-    stepChange = parseFloat($('#stepChange').get(0).value),
-    ditherType = $('input[name=dither]:checked').val(),
+    stepChange = 0.75,
     allSquares = {},
-    touchedSquare = false,
-    currentSquare = null;
+    currentStage = 0,
+    currentTest = 0;
 
 // If the user clicks somewhere in the color-block, then enable drag and
 // change the color.
 $(colorBlock).mousedown(function(e){
-  drag = true;
+  // Clear any existing cursor
+  clearBlockCursor();
+  blockDrag = true;
   stepSize = originalStepSize;
   $('#stepSize').val(stepSize);
   x = e.offsetX;
   y = e.offsetY;
-  changeGridAccordingToBlock(); 
 });
 
 // If the user is/continues dragging in the color-block, then change the color.
-$(colorBlock).mouseup(function(){
+$(colorBlock).mouseup(function(e){
+  changeGridAccordingToBlock(LOGGER); 
   LOGGER.clicked_block();
-  drag = false;
+  blockDrag = false;
+  // Draw new cursor
+  drawBlockCursor(x,y);
 });
 
 $(colorBlock).mousemove(function(e){
-  if (drag) { 
+  if (blockDrag) { 
     x = e.offsetX;
     y = e.offsetY;
     changeGridAccordingToBlock(); 
   }
 });
 
-// If the user clicks on the color strip, then change the color block.
-$(colorStrip).click(function(e){
-  LOGGER.clicked_strip();
+// If the user clicks somewhere in the color strip, then enable drag and
+// change the color block.
+$(colorStrip).mousedown(function(e){
+  // Clear block cursor
+  clearBlockCursor();
+  stripDrag = true;
   x = e.offsetX;
-  y = e.offsetY;
+  y = Math.min(stripHeight-1, Math.max(0, e.offsetY));
+  // Draw new cursor
+  clearStripCursor();
+  drawStripCursor(y);
+});
+
+// If the user is/continues dragging in the color strip, then change the color block.
+$(colorStrip).mouseup(function(e){
+  LOGGER.clicked_strip();
   let imageData = stripCtx.getImageData(x, y, 1, 1).data;
   rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
-  //console.log(`strip click: ${rgbaColor}`);
   fillGradient(rgbaColor);
+  stripDrag = false;
+  // Draw new cursor
+  clearStripCursor();
+  drawStripCursor(y);
 });
 
-// The step-size numeric input is just for personal use. It's used
-// to determine the appropriate step-size
-$('#stepSize').change(function(){
-  let number = parseInt(this.value)
-  if (number > this.max || number < this.min || number % 1 != 0){
-    alert("Value must be an integer between 0 and 50 inclusively.");
-  } else {
-    originalStepSize = number;
-    stepSize = originalStepSize;
-    changeGridAccordingToBlock(); 
-  }
-})
-
-// The step-change numeric input is just for personal use. It's used
-// to determine the appropriate change 
-$('#stepChange').change(function(){
-  let number = parseFloat(this.value)
-  if (number >= this.max || number <= this.min){
-    alert("Value must be an float between 0 and 1.0 exclusively.");
-  } else {
-    stepChange = number;
-    changeGridAccordingToBlock(); 
-  }
-})
-
-$('input[type=radio][name=dither]').change(function() {
-  ditherType = this.value;
-  console.log(ditherType);
-  LOGGER.set_ditherType(this.value);
-  changeGridAccordingToBlock(); 
-});
-
-$('input[type=radio][name=bgColor]').change(function() {
-  $('#targetContainer').css('background-color', this.value);
-  if (this.value != "white"){
-    LOGGER.set_targetBGColor("gray");
+$(colorStrip).mousemove(function(e){
+  if (stripDrag) { 
+    x = e.offsetX;
+    y = Math.min(stripHeight-1, Math.max(0, e.offsetY));
+    let imageData = stripCtx.getImageData(x, y, 1, 1).data;
+    rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
+    fillGradient(rgbaColor);
+    // Draw new cursor
+    clearStripCursor();
+    drawStripCursor(y);
   }
 });
 
-$('input[type=radio][name=display]').change(function() {
-  LOGGER.set_displayMode(this.value);
-  switch (this.value) {
-    case "custom": {
-      $(".custom").show();
-      $(".not-middle").css('visibility', 'visible'); 
-      break;
-    }
-    case "adobe": {
-      $(".custom").hide(); 
-      $(".not-middle").css('visibility', 'hidden'); 
-      // $(".not-middle").hide() moves middle-square to top left of grid
-      break;
-    }
-  }
-});
-
-// Assuming the user has already touched a square, if they 
-// want to revert their decision, they can do so. The step size
-// will go revert to the previous stepSize and the button will be 
-// disabled again.
-$('#goBack').click(function(e){
-  if (touchedSquare && stepSize * 1/stepChange <= originalStepSize){
-    stepSize *= 1/stepChange;
-    $('#stepSize').val(stepSize);
-    x = prevX;
-    y = prevY;
-    changeGridAccordingToBlock();
-    LOGGER.clicked_back(); 
-  } else {
-    alert("You either haven't touched a square yet or the step-size is bigger than the original");
-  }
-})
-
-// User is finished selecting a color
+// User is comparing the selected color to the target color
 $('#compare').click(function(e){
-  let [r,g,b,,] = allSquares[getCenterSquare()];
-  $('#userColor').css('background-color', `rgba(${r},${g},${b},1)`);
-  $('#userColor').css('border', 'black solid thin');
-  $('#targetColor').css('border-right', 'none');
-  $('#userColor').css('border-left', 'none');
+  LOGGER.clicked_compare();
+  let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
+  compareColor(r,g,b);
 })
 
 function disable_buttons(pressedStart){
@@ -162,65 +144,74 @@ function disable_buttons(pressedStart){
 
 // User has clicked start
 $('#start').click(function(e){
-  LOGGER.start_round();
-  time = new Date().getTime();
-  randomTarget();
-  LOGGER.set_targetColor(targetColor);
+  $("#stage-number").text(currentStage+1);
+  $("#color-number").text(currentTest+1);
+  setDisplayMode(stages[currentStage]["display"]);
+  $('#userColor').css('visibility', 'hidden');
+  $('#targetColor').css('border-right', '');
+  x = xStart;
+  y = yStart;
+  fillGradient(startColor);
+  changeGridAccordingToBlock();
+
+  let color = stages[currentStage]["colors"][currentTest];
+  LOGGER.start_round(currentStage, currentTest, color);
+  setTargetColor(color);
   disable_buttons(true);
+  time = new Date().getTime();
 })
 
 // Let user pick new color
 $('#submit').click(function(e){
-  var time_elapsed = new Date().getTime() - time;
+  let time_elapsed = new Date().getTime() - time;
+  disable_buttons(false);
+  let [r,g,b,,] = allSquares[getCenterSquare()].slice(0,3);
+  compareColor(r,g,b);
   LOGGER.set_submittedColor(allSquares[getCenterSquare()]);
   LOGGER.set_time(time_elapsed);
   LOGGER.stop_round();
-  if (LOGGER.all_done()){
-    LOGGER.create_file();
-  }   
-  disable_buttons(false);
+  if (currentTest == nTests-1){
+    if (currentStage == stages.length-1){
+      LOGGER.create_file();
+      $("button").prop("disabled", true);
+    }
+    else {
+      currentTest = 0;
+      currentStage++;
+    }
+  }
+  else {
+    currentTest++;
+  }
+  if (currentTest == 0){ $('#start').text("Start Test") }
+  else { $('#start').text("Next Test") }
 })
 
 // If the user clicks a square, adjust the stepsize, and update the grid. 
 // Also keep track of the previous values. 
 $('.square').click(function(e){
-  LOGGER.clicked_grid();
-  touchedSquare = true;
-  let [r,g,b,,] = allSquares[e.target.id];
-  changeBlockAccordingToRGB(r, g, b);
-  prevX = x;
-  prevY = y;
-  [x, y] = getXYFromRGB([r,g,b]);
-  //console.log([x, y]);
-  stepSize *= stepChange;
-  // Lower bound the step size
-  stepSize = Math.max(stepSize, minStepSize);
-  $('#stepSize').val(stepSize);
-  changeGridAccordingToBlock(r, g, b);
+  if (stages[currentStage]["display"] == "custom") {
+    LOGGER.clicked_grid();
+    let [r,g,b,,] = allSquares[e.target.id];
+    changeBlockAccordingToRGB(r, g, b);
+    prevX = x;
+    prevY = y;
+    [x, y] = getXYFromRGB([r,g,b]);
+    stepSize *= stepChange;
+    // Lower bound the step size
+    stepSize = Math.max(stepSize, minStepSize);
+    $('#stepSize').val(stepSize);
+    changeGridAccordingToBlock(LOGGER, r, g, b);
+  }
 });
 
-// As the user hovers over the squares, keep watch of which one
-// they are currenlty hovering over.
-$('.square').hover(function(e){
-  currentSquare = e.target.id;
-})
-
-// If the presses the spacebar, alert them of the RGB + hex-code values
-// of the currently selected square.
-$('body').keyup(function(e){
-  if(e.keyCode == 32){
-    // user has pressed space
-    let [r,g,b,,] = allSquares[currentSquare],
-        [r_t, g_t, b_t] = targetColor;
-
-    let string = `[Chose] R:${r}, G:${g}, B:${b} --> Hex: ${RGBToHex(r,g,b)}\n`
-    string += `[Target] R:${r_t}, G:${g_t}, B:${b_t} --> Hex: ${RGBToHex(r,g,b)}`
-    alert(string);
-  }
-})
-
-
 // Initialize UI
+$("#total-test-number").text(testColors.length);
+
+// Display current stage
+$("#stage-number").text(currentStage+1);
+$("#color-number").text(currentTest+1);
+setDisplayMode(stages[currentStage]["display"]);
 
 // Apply Colors to Strip and Block
 blockCtx.rect(0, 0, blockWidth, blockHeight);
@@ -229,7 +220,15 @@ stripCtx.rect(0, 0, stripWidth, stripHeight);
 fillStrip();
 
 // Initialize grid
+fillGradient(startColor);
 changeGridAccordingToBlock();
 
-// Pick target color
-// randomTarget();
+// Draw cursor
+drawBlockCursor(x,y);
+
+// Create sample JSON download link for testing
+let sampleJSON = {
+  "sample": "download"
+};
+let encodedUri = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sampleJSON));
+$("#sample").attr("href", encodedUri);

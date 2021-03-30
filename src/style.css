@@ -2,19 +2,15 @@
 body {
   margin: 0%;
   padding: 0%;
-  background-color: white;
+  background-color: #535353;
 }
+
 h1 {
-  background-color: #dbdbdb;
-  padding: 1%;
+  color: white;
+  padding-top: 1rem;
   text-align: center;
   font-family: 'Open Sans';
   width: 100%;
-}
-
-#myContainer {
-  background-color: #535353;
-  padding: 20px;
 }
 
 #color-input {
@@ -41,13 +37,12 @@ input[type=radio] {
   margin: 10px;
 }
 
-canvas:hover {
-  cursor: url("cursor.png") 10 10, auto;
+#targetContainer {
+  padding: 1rem;
 }
 
-#targetContainer {
-  background-color: white;
-  padding: 50px;
+#targetColor {
+  visibility: hidden;
 }
 
 .colorSquare {
@@ -58,4 +53,48 @@ canvas:hover {
 
 #userColor {
   border: none;
+}
+
+button {
+  margin-right: 1rem;
+}
+
+a {
+  text-decoration: underline;
+}
+
+#results {
+  visibility: hidden;
+}
+
+canvas:hover {
+  cursor: url("cursor.png") 10 10, auto;
+}
+
+.canvas-layer {
+  position: absolute;
+  top: 0;
+  right: 60px;
+}
+
+#color-block {
+  z-index: 0;
+}
+
+#color-block-cursor {
+  pointer-events: none;
+  z-index: 1;
+}
+
+.color-strip-cursor {
+  top: -5px;
+  position: absolute;
+}
+
+#color-strip-left {
+  right: 45px;
+}
+
+#color-strip-right {
+  right: 10px;
 }
