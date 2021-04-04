@@ -24,9 +24,9 @@ const colorStrip = $('#color-strip').get(0),
 const rows = 5,
       cols = 5,
       startColor = '(255, 0, 0, 1)',
-      minStepSize = 25,
-      rgbRandomness = 0.2,
-      hueRandomness = 0.15,
+      minStepSize = 5,
+      rgbRandomness = 0,
+      hueRandomness = 0,
       nTests = 10,
       testColors = randomColors(nTests),
       xStart = blockWidth/2,
@@ -53,9 +53,11 @@ let blockDrag = false,
     stripDrag = false,
     x = xStart,
     y = yStart,
-    prevX = blockWidth/2,
-    prevY = blockHeight/2,
-    originalStepSize = 50,
+    xStrip = stripWidth/2,
+    yStrip = stripHeight/2,
+    prevX = x,
+    prevY = y,
+    originalStepSize = 40,
     stepSize = originalStepSize,
     stepChange = 0.75,
     allSquares = {},
@@ -94,38 +96,37 @@ $(colorBlock).mousemove(function(e){
 // If the user clicks somewhere in the color strip, then enable drag and
 // change the color block.
 $(colorStrip).mousedown(function(e){
-  // Clear block cursor
-  clearBlockCursor();
   stripDrag = true;
-  x = e.offsetX;
-  y = Math.min(stripHeight-1, Math.max(0, e.offsetY));
+  xStrip = e.offsetX;
+  yStrip = Math.min(stripHeight-1, Math.max(0, e.offsetY));
   // Draw new cursor
   clearStripCursor();
-  drawStripCursor(y);
+  drawStripCursor(yStrip);
 });
 
 // If the user is/continues dragging in the color strip, then change the color block.
 $(colorStrip).mouseup(function(e){
   LOGGER.clicked_strip();
-  let imageData = stripCtx.getImageData(x, y, 1, 1).data;
-  rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
+  let [r,g,b] = stripCtx.getImageData(xStrip, yStrip, 1, 1).data;
+  rgbaColor = `rgba(${r},${g},${b},1)`;
   fillGradient(rgbaColor);
   stripDrag = false;
+  changeGridAccordingToBlock(LOGGER);
   // Draw new cursor
   clearStripCursor();
-  drawStripCursor(y);
+  drawStripCursor(yStrip);
 });
 
 $(colorStrip).mousemove(function(e){
   if (stripDrag) { 
-    x = e.offsetX;
-    y = Math.min(stripHeight-1, Math.max(0, e.offsetY));
-    let imageData = stripCtx.getImageData(x, y, 1, 1).data;
-    rgbaColor = 'rgba(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ',1)';
+    xStrip = e.offsetX;
+    yStrip = Math.min(stripHeight-1, Math.max(0, e.offsetY));
+    let [r,g,b] = stripCtx.getImageData(xStrip, yStrip, 1, 1).data;
+    rgbaColor = `rgba(${r},${g},${b},1)`;
     fillGradient(rgbaColor);
     // Draw new cursor
     clearStripCursor();
-    drawStripCursor(y);
+    drawStripCursor(yStrip);
   }
 });
 
@@ -151,8 +152,12 @@ $('#start').click(function(e){
   $('#targetColor').css('border-right', '');
   x = xStart;
   y = yStart;
+  stepSize = originalStepSize;
   fillGradient(startColor);
   changeGridAccordingToBlock();
+  clearStripCursor();
+  clearBlockCursor();
+  drawBlockCursor(x,y);
 
   let color = stages[currentStage]["colors"][currentTest];
   LOGGER.start_round(currentStage, currentTest, color);
@@ -197,6 +202,14 @@ $('.square').click(function(e){
     prevX = x;
     prevY = y;
     [x, y] = getXYFromRGB([r,g,b]);
+
+    // Draw new cursors
+    yStrip = getYFromRGB([r,g,b]);
+    clearStripCursor();
+    drawStripCursor(yStrip);
+    clearBlockCursor();
+    drawBlockCursor(x,y);
+
     stepSize *= stepChange;
     // Lower bound the step size
     stepSize = Math.max(stepSize, minStepSize);

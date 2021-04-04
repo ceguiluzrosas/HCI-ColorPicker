@@ -68,6 +68,10 @@ function compareColor(r,g,b){
 
 // ✨ Color Block Magic ✨
 
+function boundXY(_x,_y){
+  return [Math.min(Math.max(_x, 0), blockWidth-1), Math.min(Math.max(_y, 0), blockHeight-1)];
+}
+
 // Retreives the RGB values from the point where the user has
 // clicked on the color-block.
 function getRGBFromBlock(newX, newY){
@@ -132,28 +136,6 @@ function drawBlockCursor(x,y){
   cursorCtx.stroke();
 }
 
-function clearStripCursor(){
-  leftCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
-  rightCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
-}
-
-function drawStripCursor(y){
-  leftCtx.fillStyle = "white";
-  leftCtx.beginPath();
-  yOffset = y + (stripCursorHeight - stripHeight)/2;
-  leftCtx.moveTo(stripCursorWidth, yOffset);
-  leftCtx.lineTo(0, yOffset-stripCursorWidth);
-  leftCtx.lineTo(0, yOffset+stripCursorWidth);
-  leftCtx.fill();
-
-  rightCtx.fillStyle = "white";
-  rightCtx.beginPath();
-  rightCtx.moveTo(0, yOffset);
-  rightCtx.lineTo(stripCursorWidth, yOffset-stripCursorWidth);
-  rightCtx.lineTo(stripCursorWidth, yOffset+stripCursorWidth);
-  rightCtx.fill();
-}
-
 // Color the color-block with gradients.
 function fillGradient(rgbaColor){
   blockCtx.clearRect(0, 0, blockWidth, blockHeight);
@@ -190,6 +172,42 @@ function changeBlockAccordingToRGB(r, g, b){
 
 // ✨ Color Strip Magic ✨
 
+function boundStripXY(_x,_y){
+  return [Math.min(Math.max(_x, 0), stripWidth-1), Math.min(Math.max(_y, 0), stripHeight-1)];
+}
+
+// Retreives the hue from the strip based on stripX stripY
+function getHueFromStrip(stripX, stripY){
+  [stripX, stripY] = boundStripXY(stripX, stripY);
+  let [r,g,b] = stripCtx.getImageData(stripX, stripY, 1, 1).data;
+  let [h,s,v] = RGBToHSV(r,g,b);
+  return h;
+}
+
+// Find [x,y] location on canvas given [r,g,b]
+function getYFromRGB(rgb){
+  let [h,,] = RGBToHSV(...rgb),
+      _x = stripWidth/2,
+      est_y = Math.round((1 - h) * (stripHeight-1))+1;
+  // Check y +/- 10 because gradient isn't perfectly linear
+  let bestXY, bestDiff;
+  for (let _y = est_y-10; _y <= est_y+10; _y++) {
+    let _h = getHueFromStrip(_x, _y);
+    let diff = Math.abs(h - _h);
+    if (diff == 0) { return boundStripXY(_x, _y) };
+    if (!bestDiff) {
+      bestXY = boundStripXY(_x, _y);
+      bestDiff = diff;
+    }
+    if (diff < bestDiff) { 
+      bestXY = boundStripXY(_x, _y);
+      bestDiff = diff;
+    }
+  }
+  // Only need to return the yStrip value
+  return bestXY[1]; 
+}
+
 function fillStrip(){
   stripCtx.clearRect(0, 0, stripWidth, stripHeight);
   let gradient = stripCtx.createLinearGradient(0, 0, 0, blockHeight);
@@ -204,9 +222,32 @@ function fillStrip(){
   stripCtx.fill();
 }
 
+function clearStripCursor(){
+  leftCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
+  rightCtx.clearRect(0, 0, stripCursorWidth, stripCursorHeight);
+}
+
+function drawStripCursor(y){
+  leftCtx.fillStyle = "white";
+  leftCtx.beginPath();
+  yOffset = y + (stripCursorHeight - stripHeight)/2;
+  leftCtx.moveTo(stripCursorWidth, yOffset);
+  leftCtx.lineTo(0, yOffset-stripCursorWidth);
+  leftCtx.lineTo(0, yOffset+stripCursorWidth);
+  leftCtx.fill();
+
+  rightCtx.fillStyle = "white";
+  rightCtx.beginPath();
+  rightCtx.moveTo(0, yOffset);
+  rightCtx.lineTo(stripCursorWidth, yOffset-stripCursorWidth);
+  rightCtx.lineTo(stripCursorWidth, yOffset+stripCursorWidth);
+  rightCtx.fill();
+}
+
+
 // ✨ Grid Magic ✨
 
-function boundXY(_x,_y){
+function boundStripXY(_x,_y){
   return [Math.min(Math.max(_x, 0), blockWidth-1), Math.min(Math.max(_y, 0), blockHeight-1)];
 }
 
@@ -294,7 +335,7 @@ function changeGridAccordingToBlock(LOGGER=null, r=null, g=null, b=null){
     for (let col=0; col<cols; col++){
       // Assign square color, but don't randomize the center square
       if (isCenterSquare(row, col)) { allSquares[`b${row}${col}`] = [r,g,b,x,y]; }
-      else { allSquares[`b${row}${col}`] = getSquareColor(x,y,stepX, stepY); }
+      else { allSquares[`b${col}${row}`] = getSquareColor(x,y,stepX, stepY); }
       stepY = incrementStep(stepY);
     }
     stepX = incrementStep(stepX);
