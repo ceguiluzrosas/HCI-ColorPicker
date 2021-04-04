@@ -335,7 +335,7 @@ function changeGridAccordingToBlock(LOGGER=null, r=null, g=null, b=null){
     for (let col=0; col<cols; col++){
       // Assign square color, but don't randomize the center square
       if (isCenterSquare(row, col)) { allSquares[`b${row}${col}`] = [r,g,b,x,y]; }
-      else { allSquares[`b${row}${col}`] = getSquareColor(x,y,stepX, stepY); }
+      else { allSquares[`b${col}${row}`] = getSquareColor(x,y,stepX, stepY); }
       stepY = incrementStep(stepY);
     }
     stepX = incrementStep(stepX);

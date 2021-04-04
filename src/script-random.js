@@ -24,7 +24,7 @@ const colorStrip = $('#color-strip').get(0),
 const rows = 5,
       cols = 5,
       startColor = '(255, 0, 0, 1)',
-      minStepSize = 25,
+      minStepSize = 5,
       rgbRandomness = 0,
       hueRandomness = 0,
       nTests = 10,
@@ -57,7 +57,7 @@ let blockDrag = false,
     yStrip = stripHeight/2,
     prevX = x,
     prevY = y,
-    originalStepSize = 50,
+    originalStepSize = 40,
     stepSize = originalStepSize,
     stepChange = 0.75,
     allSquares = {},
@@ -152,8 +152,12 @@ $('#start').click(function(e){
   $('#targetColor').css('border-right', '');
   x = xStart;
   y = yStart;
+  stepSize = originalStepSize;
   fillGradient(startColor);
   changeGridAccordingToBlock();
+  clearStripCursor();
+  clearBlockCursor();
+  drawBlockCursor(x,y);
 
   let color = stages[currentStage]["colors"][currentTest];
   LOGGER.start_round(currentStage, currentTest, color);
