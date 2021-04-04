@@ -181,8 +181,15 @@ $('#submit').click(function(e){
       $("button").prop("disabled", true);
     }
     else {
-      currentTest = 0;
-      currentStage++;
+      setTimeout(function (){
+        $('#targetColor').css('visibility', 'hidden');
+        $('#userColor').css('visibility', 'hidden');
+        currentTest = 0;
+        currentStage++;
+        setDisplayMode(stages[currentStage]["display"]);
+        $("#stage-number").text(currentStage+1);
+        $("#color-number").text(currentTest+1);
+      }, 1000);
     }
   }
   else {
